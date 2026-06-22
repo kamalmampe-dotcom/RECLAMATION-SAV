@@ -117,4 +117,5 @@ Escalade automatique par `node-cron` (`ENABLE_JOBS=true`).
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — architecture applicative
 - [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) — modèle de données détaillé
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — déploiement (Supabase, Render, Brevo)
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — plan de livraison par phases

@@ -41,9 +41,15 @@ function startServer() {
   app.use('/api', notFoundHandler);
 
   // --- SPA React (build de production) avec fallback côté client ---
-  // En développement, l'UI est servie par Vite (npm run dev:web) qui proxifie /api.
-  const distPath = path.join(currentDir, 'dist');
-  if (fs.existsSync(path.join(distPath, 'index.html'))) {
+  // En dev, l'UI est servie par Vite (npm run dev:web) qui proxifie /api.
+  // En prod, le bundle serveur (server.cjs) vit dans dist/ : le front est à côté
+  // (currentDir). En dev (tsx), il est dans ./dist. On détecte le bon dossier via
+  // la présence d'index.html ET du dossier assets/ (un build, pas l'index source).
+  const candidates = [path.join(currentDir, 'dist'), currentDir];
+  const distPath = candidates.find(
+    (p) => fs.existsSync(path.join(p, 'index.html')) && fs.existsSync(path.join(p, 'assets')),
+  );
+  if (distPath) {
     app.use(express.static(distPath));
     app.get('*', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
   }

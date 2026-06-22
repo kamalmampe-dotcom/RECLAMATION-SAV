@@ -13,7 +13,7 @@ professionnel multi-site (PostgreSQL, React). Livraison par phases.
 | **5 — Frontend React** | SPA React (auth, console réclamations, admin), navigation par rôle | ✅ Fait |
 | **6 — KPI Dashboard** | Volume, délai moyen, taux escalade, NPS, top causes, perf/site | ✅ Fait |
 | **7 — IA (optionnel)** | Suggestion catégorie/causes/priorité + résumé client | ✅ Fait |
-| **8 — Doc + déploiement** | Doc finale, CI, déploiement Render + Supabase | ⏳ À venir |
+| **8 — Doc + déploiement** | Blueprint Render, CI GitHub, guides Render/Brevo/Supabase | ✅ Prêt |
 
 ## État actuel (fin Phase 2)
 
@@ -34,8 +34,17 @@ professionnel multi-site (PostgreSQL, React). Livraison par phases.
 **Vérifié :** `prisma validate` ✅, `npm run lint` (TypeScript) ✅, démarrage serveur +
 `/api/health` + garde RBAC (401) ✅.
 
-**Reporté aux phases suivantes :**
-- Déploiement (Render + Supabase) + CI → Phase 8.
+## État Phase 8 (déploiement)
+
+- **`render.yaml`** : Blueprint Render (build avec `--include=dev`, migrations au
+  démarrage, health check `/api/health`, variables d'env).
+- **`.github/workflows/ci.yml`** : CI (lint + build) sur chaque push/PR, sans base.
+- **`docs/DEPLOYMENT.md`** : guides pas à pas Supabase (migration locale), Brevo
+  (emails, test sans domaine), Render (Blueprint ou manuel), post-déploiement.
+- `package.json` : `engines.node >=20`, `postinstall: prisma generate`.
+
+> Le déploiement effectif (clics Render + secrets) se fait côté client : il requiert
+> le compte Render et les identifiants Supabase/Brevo.
 
 ## État Phases 6 & 7 (KPI + IA)
 
