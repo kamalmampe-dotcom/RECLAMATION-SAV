@@ -6,6 +6,7 @@ import {
   assignComplaint,
   createComplaint,
   getComplaint,
+  getComplaintStats,
   listComplaints,
   qualifyComplaint,
   runEscalationSweep,
@@ -26,6 +27,8 @@ router.post('/ops/escalation-sweep', requirePermission('KPI_VIEW'), runEscalatio
 
 // Téléchargement d'une pièce jointe (route à plat, avant /:id).
 router.get('/attachments/:attId/download', requirePermission('COMPLAINT_VIEW'), downloadAttachment);
+
+router.get('/stats', requirePermission('COMPLAINT_VIEW'), getComplaintStats);
 
 router.get('/', requirePermission('COMPLAINT_VIEW'), listComplaints);
 router.post('/', requirePermission('COMPLAINT_CREATE'), createComplaint);

@@ -115,5 +115,41 @@ export interface ComplaintDetail extends ComplaintListItem {
     changedBy: { fullName: string; role: Role } | null;
   }[];
   escalations: { id: string; reason: string; level: number; note: string | null; createdAt: string }[];
+  correctiveActions: CorrectiveAction[];
+  notes: InternalNoteRow[];
+  or: RepairOrderRow | null;
   nps: { score: number | null; category: string | null } | null;
+}
+
+export interface CorrectiveAction {
+  id: string;
+  description: string;
+  responsible: string;
+  dueDate: string | null;
+  status: 'PENDING' | 'IN_PROGRESS' | 'DONE' | 'CANCELLED';
+  createdAt: string;
+}
+
+export interface InternalNoteRow {
+  id: string;
+  note: string;
+  visibility: string;
+  createdAt: string;
+  author: { fullName: string; role: Role } | null;
+}
+
+export interface RepairOrderRow {
+  id: string;
+  orNumber: string;
+  workshop: string | null;
+  status: 'OPEN' | 'IN_PROGRESS' | 'CLOSED';
+  openedAt: string;
+}
+
+export interface ComplaintStats {
+  total: number;
+  escalated: number;
+  overdue: number;
+  mine: number;
+  byStatus: Partial<Record<ComplaintStatus, number>>;
 }

@@ -40,6 +40,7 @@ export const complaintRepository = {
         statusHistory: { orderBy: { createdAt: 'desc' }, include: { changedBy: { select: { fullName: true, role: true } } } },
         escalations: { orderBy: { createdAt: 'desc' } },
         correctiveActions: { orderBy: { createdAt: 'desc' } },
+        notes: { orderBy: { createdAt: 'desc' }, include: { author: { select: { fullName: true, role: true } } } },
         nps: true,
       },
     });

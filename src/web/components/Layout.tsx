@@ -23,11 +23,13 @@ const NAV: NavItem[] = [
 
 function Brand() {
   return (
-    <div className="flex items-center gap-2 px-5 py-4">
-      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 font-bold text-white">CF</div>
+    <div className="flex items-center gap-3 bg-gradient-to-br from-brand-700 to-brand-900 px-5 py-4 text-white">
+      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/15 text-sm font-bold tracking-tight ring-1 ring-white/25">
+        CF
+      </div>
       <div>
         <div className="text-sm font-semibold leading-tight">CFAO Automotive</div>
-        <div className="text-xs text-slate-500">SAV / Réclamations</div>
+        <div className="text-xs text-white/70">SAV &amp; Réclamations</div>
       </div>
     </div>
   );
@@ -56,7 +58,7 @@ export function Layout({ children }: { children: ReactNode }) {
           onClick={() => setMenuOpen(false)}
           className={({ isActive }) =>
             `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
-              isActive ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-100'
+              isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100'
             }`
           }
         >

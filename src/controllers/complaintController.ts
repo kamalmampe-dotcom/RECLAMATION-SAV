@@ -27,11 +27,17 @@ export const listComplaints = asyncHandler(async (req: Request, res: Response) =
   const actor = currentUser(req)!;
   const result = await complaintService.list(
     actor,
-    { status: q.status, priority: q.priority, siteId: q.siteId, q: q.q },
+    { status: q.status, priority: q.priority, siteId: q.siteId, q: q.q, mine: q.mine === 'true' },
     q.page,
     q.pageSize,
   );
   res.json(result);
+});
+
+export const getComplaintStats = asyncHandler(async (req: Request, res: Response) => {
+  const actor = currentUser(req)!;
+  const stats = await complaintService.stats(actor);
+  res.json(stats);
 });
 
 export const getComplaint = asyncHandler(async (req: Request, res: Response) => {

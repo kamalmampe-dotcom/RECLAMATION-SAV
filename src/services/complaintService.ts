@@ -90,7 +90,7 @@ export const complaintService = {
 
   async list(
     actor: SessionUser,
-    filter: { status?: ComplaintStatus; priority?: Priority; siteId?: string; q?: string },
+    filter: { status?: ComplaintStatus; priority?: Priority; siteId?: string; q?: string; mine?: boolean },
     page: number,
     pageSize: number,
   ) {
@@ -100,6 +100,7 @@ export const complaintService = {
       ...(filter.status ? { status: filter.status } : {}),
       ...(filter.priority ? { priority: filter.priority } : {}),
       ...(filter.siteId ? { siteId: filter.siteId } : {}),
+      ...(filter.mine ? { assignedToId: actor.userId } : {}),
       ...(q
         ? {
             OR: [
@@ -116,6 +117,23 @@ export const complaintService = {
       complaintRepository.count(where),
     ]);
     return { items, total, page, pageSize };
+  },
+
+  /** Statistiques de synthèse, scopées par la visibilité de l'utilisateur. */
+  async stats(actor: SessionUser) {
+    const scope = complaintVisibilityWhere(actor) as Prisma.ComplaintWhereInput;
+    const openStatuses: ComplaintStatus[] = ['ASSIGNED', 'IN_PROGRESS', 'PENDING_PARTS', 'ESCALATED'];
+    const [groups, total, escalated, overdue, mine] = await Promise.all([
+      prisma.complaint.groupBy({ by: ['status'], where: scope, _count: true }),
+      prisma.complaint.count({ where: scope }),
+      prisma.complaint.count({ where: { ...scope, escalationLevel: { gt: 0 } } }),
+      prisma.complaint.count({
+        where: { ...scope, status: { notIn: ['RESOLVED', 'CLOSED', 'CANCELLED'] }, slaDueAt: { lt: new Date() } },
+      }),
+      prisma.complaint.count({ where: { ...scope, assignedToId: actor.userId, status: { in: openStatuses } } }),
+    ]);
+    const byStatus = Object.fromEntries(groups.map((g) => [g.status, g._count as number])) as Record<ComplaintStatus, number>;
+    return { total, escalated, overdue, mine, byStatus };
   },
 
   async getById(id: string, actor: SessionUser) {

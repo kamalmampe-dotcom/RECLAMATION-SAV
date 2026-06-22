@@ -18,9 +18,9 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primar
 
 export function Button({ variant = 'primary', className = '', ...props }: ButtonProps) {
   const styles = {
-    primary: 'bg-blue-600 hover:bg-blue-700 text-white',
+    primary: 'bg-brand-600 hover:bg-brand-700 text-white shadow-sm',
     secondary: 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-300',
-    danger: 'bg-red-600 hover:bg-red-700 text-white',
+    danger: 'bg-red-600 hover:bg-red-700 text-white shadow-sm',
   }[variant];
   return (
     <button
@@ -40,4 +40,4 @@ export function Field({ label, children }: { label: string; children: ReactNode 
 }
 
 export const inputClass =
-  'w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500';
+  'w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500';

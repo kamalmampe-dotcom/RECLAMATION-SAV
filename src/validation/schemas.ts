@@ -96,6 +96,7 @@ export const listComplaintsQuerySchema = z.object({
   priority: PriorityEnum.optional(),
   siteId: z.string().uuid().optional(),
   q: z.string().trim().max(120).optional(),
+  mine: z.literal('true').optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(200).default(50),
 });
