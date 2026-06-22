@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 import { env } from './src/lib/env.js';
@@ -14,6 +15,7 @@ import authRoutes from './src/routes/auth.js';
 import userRoutes from './src/routes/users.js';
 import complaintRoutes from './src/routes/complaints.js';
 import referenceRoutes from './src/routes/reference.js';
+import kpiRoutes from './src/routes/kpi.js';
 
 const currentDir =
   typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
@@ -33,14 +35,24 @@ function startServer() {
   app.use('/api/users', userRoutes);
   app.use('/api/complaints', complaintRoutes);
   app.use('/api/reference', referenceRoutes);
+  app.use('/api/kpi', kpiRoutes);
 
   // 404 JSON pour les routes /api inconnues
   app.use('/api', notFoundHandler);
 
-  // --- Front statique hérité (remplacé par le SPA React en Phase 5) ---
-  const publicPath = path.join(currentDir, 'src/public');
-  app.use(express.static(publicPath));
-  app.get('/', (_req, res) => res.sendFile(path.join(publicPath, 'views/login.html')));
+  // --- SPA React (build de production) avec fallback côté client ---
+  // En dev, l'UI est servie par Vite (npm run dev:web) qui proxifie /api.
+  // En prod, le bundle serveur (server.cjs) vit dans dist/ : le front est à côté
+  // (currentDir). En dev (tsx), il est dans ./dist. On détecte le bon dossier via
+  // la présence d'index.html ET du dossier assets/ (un build, pas l'index source).
+  const candidates = [path.join(currentDir, 'dist'), currentDir];
+  const distPath = candidates.find(
+    (p) => fs.existsSync(path.join(p, 'index.html')) && fs.existsSync(path.join(p, 'assets')),
+  );
+  if (distPath) {
+    app.use(express.static(distPath));
+    app.get('*', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
+  }
 
   // --- Gestion centralisée des erreurs (toujours en dernier) ---
   app.use(errorHandler);

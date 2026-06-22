@@ -44,15 +44,21 @@ cp .env.example .env
 npm run db:migrate      # crée les tables (migrations Prisma)
 npm run db:seed         # 6 sites + taxonomie + comptes par défaut
 
-# 4. Lancer
-npm run dev             # http://localhost:3000
+# 4. Lancer (API + frontend React en dev)
+npm run dev:all         # Express (API :3000) + Vite (UI :5173, proxy /api)
+#   ou séparément : `npm run dev` (API) et `npm run dev:web` (UI)
 ```
+
+En production, `npm run build` compile le SPA React dans `dist/`, et `npm start`
+lance le serveur Express qui sert à la fois l'API et le frontend.
 
 ### Scripts utiles
 
 | Script | Rôle |
 |---|---|
-| `npm run dev` | Serveur de développement (hot-reload) |
+| `npm run dev:all` | API + frontend React (dev) |
+| `npm run dev` | API Express seule (hot-reload) |
+| `npm run dev:web` | Frontend Vite seul |
 | `npm run db:migrate` | Crée/applique les migrations Prisma (dev) |
 | `npm run db:deploy` | Applique les migrations (production) |
 | `npm run db:seed` | Sites + catégories + causes racines + comptes |
@@ -95,14 +101,21 @@ exigent une session ; les actions sont filtrées par RBAC (rôle + site).
 | `PATCH` | `/api/complaints/:id/qualify` | CRM_MANAGER |
 | `PATCH` | `/api/complaints/:id/assign` | CHEF_ATELIER / RESPONSABLE_SAV |
 | `PATCH` | `/api/complaints/:id/status` | CONSEILLER_SAV / … |
+| `POST` | `/api/complaints/:id/ai-suggest` | CRM_MANAGER (si IA activée) |
 | `POST` | `/api/complaints/ops/escalation-sweep` | ADMIN / DIRECTION / RESPONSABLE_SAV |
+| `GET` | `/api/kpi/overview?days=&siteId=` | ADMIN / DIRECTION / RESPONSABLE_SAV |
 
 Notifications email automatiques (via `NotificationService`, journalisées dans
 `email_logs`) sur : création, affectation, changement de statut, escalade, clôture, NPS.
 Escalade automatique par `node-cron` (`ENABLE_JOBS=true`).
 
+> 🧪 **Test des emails sans domaine** : renseigne `TEST_NOTIFICATION_EMAIL` avec une
+> adresse perso — tous les emails y sont redirigés. Pour un envoi réel, utilise un
+> SMTP Gmail (mot de passe d'application) ou Brevo (voir `.env.example`).
+
 ## Documentation
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — architecture applicative
 - [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) — modèle de données détaillé
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — déploiement (Supabase, Render, Brevo)
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — plan de livraison par phases

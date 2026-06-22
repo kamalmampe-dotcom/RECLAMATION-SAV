@@ -11,6 +11,7 @@
 import type { Role } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
+import { env } from '../lib/env.js';
 import { getTransporter, senderAddress } from '../lib/mailer.js';
 import * as tpl from '../notifications/templates.js';
 import type { NotifComplaint, RenderedEmail } from '../notifications/templates.js';
@@ -38,8 +39,13 @@ async function deliver(params: {
   rendered: RenderedEmail;
   complaintId?: string | null;
 }): Promise<void> {
-  const recipients = (Array.isArray(params.to) ? params.to : [params.to]).filter(Boolean);
+  let recipients = (Array.isArray(params.to) ? params.to : [params.to]).filter(Boolean);
   if (recipients.length === 0) return;
+
+  // Mode test : redirige tous les emails vers une adresse unique (aucun domaine requis).
+  if (env.TEST_NOTIFICATION_EMAIL) {
+    recipients = [env.TEST_NOTIFICATION_EMAIL];
+  }
 
   const transporter = getTransporter();
   const toAddress = recipients.join(', ');

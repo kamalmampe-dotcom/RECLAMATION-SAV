@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireAuth, requirePermission } from '../middleware/auth.js';
 import {
+  aiSuggest,
   assignComplaint,
   createComplaint,
   getComplaint,
@@ -21,6 +22,7 @@ router.get('/', requirePermission('COMPLAINT_VIEW'), listComplaints);
 router.post('/', requirePermission('COMPLAINT_CREATE'), createComplaint);
 router.get('/:id', requirePermission('COMPLAINT_VIEW'), getComplaint);
 
+router.post('/:id/ai-suggest', requirePermission('COMPLAINT_QUALIFY'), aiSuggest);
 router.patch('/:id/qualify', requirePermission('COMPLAINT_QUALIFY'), qualifyComplaint);
 router.patch('/:id/assign', requirePermission('COMPLAINT_ASSIGN'), assignComplaint);
 router.patch('/:id/status', requirePermission('COMPLAINT_TREAT'), updateComplaintStatus);
