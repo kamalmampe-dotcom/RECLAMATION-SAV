@@ -28,7 +28,7 @@ export default function KpiPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold">Pilotage — Indicateurs SAV</h1>
+        <h1 className="text-xl font-semibold">Pilotage - Indicateurs SAV</h1>
         <div className="flex gap-1 rounded-lg border border-slate-200 bg-white p-1">
           {PERIODS.map((p) => (
             <button
@@ -47,9 +47,9 @@ export default function KpiPage() {
         <>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <Stat label="Volume réclamations" value={String(data.volume.total)} />
-            <Stat label="Délai moyen résolution" value={data.avgResolutionHours != null ? `${(data.avgResolutionHours / 24).toFixed(1)} j` : '—'} />
+            <Stat label="Délai moyen résolution" value={data.avgResolutionHours != null ? `${(data.avgResolutionHours / 24).toFixed(1)} j` : '-'} />
             <Stat label="Taux d'escalade" value={`${Math.round(data.escalationRate * 100)} %`} accent="text-red-600" />
-            <Stat label="NPS" value={data.nps.score != null ? String(data.nps.score) : '—'} accent="text-emerald-600" sub={`${data.nps.responses} réponse(s)`} />
+            <Stat label="NPS" value={data.nps.score != null ? String(data.nps.score) : '-'} accent="text-emerald-600" sub={`${data.nps.responses} réponse(s)`} />
           </div>
 
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
@@ -114,7 +114,7 @@ export default function KpiPage() {
                       <td className="py-2">{s.total}</td>
                       <td className="py-2">{s.resolved}</td>
                       <td className="py-2">{Math.round(s.escalationRate * 100)} %</td>
-                      <td className="py-2">{s.avgResolutionHours != null ? `${(s.avgResolutionHours / 24).toFixed(1)} j` : '—'}</td>
+                      <td className="py-2">{s.avgResolutionHours != null ? `${(s.avgResolutionHours / 24).toFixed(1)} j` : '-'}</td>
                     </tr>
                   ))}
                   {data.bySite.length === 0 && <tr><td colSpan={5} className="py-6 text-center text-slate-400">Aucune donnée.</td></tr>}

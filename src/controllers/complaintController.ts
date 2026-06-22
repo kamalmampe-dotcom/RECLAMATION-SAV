@@ -27,7 +27,7 @@ export const listComplaints = asyncHandler(async (req: Request, res: Response) =
   const actor = currentUser(req)!;
   const result = await complaintService.list(
     actor,
-    { status: q.status, priority: q.priority, siteId: q.siteId },
+    { status: q.status, priority: q.priority, siteId: q.siteId, q: q.q },
     q.page,
     q.pageSize,
   );

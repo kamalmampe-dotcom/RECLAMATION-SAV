@@ -1,6 +1,5 @@
 /**
- * Middleware d'authentification & RBAC — basé EXCLUSIVEMENT sur la session serveur.
- * (L'ancien mécanisme via en-têtes `x-user-id`/`x-user-role`, falsifiable, est supprimé.)
+ * Middleware d'authentification & RBAC — basé sur la session serveur.
  */
 import type { NextFunction, Request, Response } from 'express';
 import type { Role } from '@prisma/client';
@@ -39,6 +38,16 @@ export function requirePermission(permission: Permission) {
     const user = currentUser(req);
     if (!user) return next(unauthorized());
     if (!can(user.role, permission)) return next(forbidden());
+    next();
+  };
+}
+
+/** Exige au moins une des permissions indiquées. */
+export function requireAnyPermission(...permissions: Permission[]) {
+  return (req: Request, _res: Response, next: NextFunction): void => {
+    const user = currentUser(req);
+    if (!user) return next(unauthorized());
+    if (!permissions.some((p) => can(user.role, p))) return next(forbidden());
     next();
   };
 }

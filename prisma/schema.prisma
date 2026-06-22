@@ -1,7 +1,6 @@
 // =============================================================================
 //  CFAO Automotive — SAV / Réclamations
-//  Schéma PostgreSQL (Prisma) — Modèle métier conforme au cahier des charges
-//  Migration depuis SQLite. Entité centrale : Complaint (Réclamation).
+//  Schéma PostgreSQL (Prisma). Entité centrale : Complaint (Réclamation).
 // =============================================================================
 
 generator client {

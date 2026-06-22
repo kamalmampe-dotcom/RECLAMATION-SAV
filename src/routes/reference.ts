@@ -8,6 +8,7 @@ import { prisma } from '../lib/prisma.js';
 import { asyncHandler } from '../lib/errors.js';
 import { hasGlobalVisibility } from '../lib/rbac.js';
 import { aiEnabled } from '../services/aiService.js';
+import { isStorageConfigured } from '../lib/env.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -16,7 +17,7 @@ router.use(requireAuth);
 router.get(
   '/config',
   asyncHandler(async (_req, res) => {
-    res.json({ aiEnabled });
+    res.json({ aiEnabled, storageEnabled: isStorageConfigured });
   }),
 );
 

@@ -6,6 +6,7 @@ services:
     name: cfao-sav
     runtime: node
     plan: free # passer à un plan payant pour que l'escalade (node-cron) tourne 24/7
+    region: frankfurt # MÊME zone que Supabase (eu-west-1) -> faible latence DB
     branch: main
     # --include=dev car les outils de build (vite, esbuild, tsc, prisma) sont en devDependencies
     buildCommand: npm ci --include=dev && npm run build

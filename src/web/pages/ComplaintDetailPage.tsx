@@ -5,19 +5,8 @@ import { api, ApiError } from '../lib/api.ts';
 import { Button, Card, Field, PriorityBadge, StatusBadge, inputClass } from '../components/ui.tsx';
 import { PRIORITY_LABELS, ROLE_LABELS, STATUS_LABELS, formatDate } from '../lib/labels.ts';
 import { useAuth } from '../auth/AuthContext.tsx';
+import { ALLOWED_TRANSITIONS } from '@/src/lib/complaintWorkflow.ts';
 import type { Category, ComplaintDetail, ComplaintStatus, Priority, RootCause } from '../lib/types.ts';
-
-const ALLOWED_TRANSITIONS: Record<ComplaintStatus, ComplaintStatus[]> = {
-  NEW: ['CANCELLED'],
-  QUALIFIED: ['CANCELLED'],
-  ASSIGNED: ['IN_PROGRESS', 'CANCELLED'],
-  IN_PROGRESS: ['PENDING_PARTS', 'ESCALATED', 'RESOLVED', 'CANCELLED'],
-  PENDING_PARTS: ['IN_PROGRESS', 'ESCALATED', 'RESOLVED', 'CANCELLED'],
-  ESCALATED: ['IN_PROGRESS', 'RESOLVED', 'CANCELLED'],
-  RESOLVED: ['CLOSED', 'IN_PROGRESS'],
-  CLOSED: [],
-  CANCELLED: [],
-};
 
 export default function ComplaintDetailPage() {
   const { id = '' } = useParams();
@@ -74,11 +63,11 @@ export default function ComplaintDetailPage() {
             <dl className="grid grid-cols-2 gap-3 text-sm">
               <Info label="Client" value={c.clientName} />
               <Info label="Téléphone" value={c.clientPhone} />
-              <Info label="Email" value={c.clientEmail ?? '—'} />
-              <Info label="Site" value={c.site ? `${c.site.city} (${c.site.code})` : '—'} />
-              <Info label="Immatriculation" value={c.vehiclePlate ?? '—'} />
-              <Info label="Modèle" value={c.vehicleModel ?? '—'} />
-              <Info label="VIN" value={c.vehicleVin ?? '—'} />
+              <Info label="Email" value={c.clientEmail ?? '-'} />
+              <Info label="Site" value={c.site ? `${c.site.city} (${c.site.code})` : '-'} />
+              <Info label="Immatriculation" value={c.vehiclePlate ?? '-'} />
+              <Info label="Modèle" value={c.vehicleModel ?? '-'} />
+              <Info label="VIN" value={c.vehicleVin ?? '-'} />
               <Info label="Catégorie" value={c.category?.labelFr ?? 'À qualifier'} />
             </dl>
             <div className="mt-4">
@@ -93,6 +82,8 @@ export default function ComplaintDetailPage() {
               </div>
             )}
           </Card>
+
+          <AttachmentsPanel id={id} canUpload={canTreat} />
 
           <Card className="p-5">
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Historique</h2>
@@ -116,8 +107,8 @@ export default function ComplaintDetailPage() {
           <Card className="p-5">
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Suivi</h2>
             <dl className="space-y-2 text-sm">
-              <Info label="Créée par" value={c.createdBy ? `${c.createdBy.fullName} (${ROLE_LABELS[c.createdBy.role]})` : '—'} />
-              <Info label="Affectée à" value={c.assignedTo?.fullName ?? '—'} />
+              <Info label="Créée par" value={c.createdBy ? `${c.createdBy.fullName} (${ROLE_LABELS[c.createdBy.role]})` : '-'} />
+              <Info label="Affectée à" value={c.assignedTo?.fullName ?? '-'} />
               <Info label="Échéance SLA" value={formatDate(c.slaDueAt)} />
               <Info label="Créée le" value={formatDate(c.createdAt)} />
             </dl>
@@ -141,6 +132,90 @@ export default function ComplaintDetailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+interface AttachmentRow {
+  id: string;
+  fileName: string;
+  mimeType: string | null;
+  size: number | null;
+  createdAt: string;
+  uploadedBy: { fullName: string } | null;
+}
+
+function formatSize(bytes: number | null): string {
+  if (!bytes) return '';
+  if (bytes < 1024) return `${bytes} o`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} Ko`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
+}
+
+function AttachmentsPanel({ id, canUpload }: { id: string; canUpload: boolean }) {
+  const qc = useQueryClient();
+  const [error, setError] = useState<string | null>(null);
+  const { data: config } = useQuery({
+    queryKey: ['config'],
+    queryFn: () => api.get<{ aiEnabled: boolean; storageEnabled: boolean }>('/api/reference/config'),
+  });
+  const { data } = useQuery({
+    queryKey: ['attachments', id],
+    queryFn: () => api.get<{ attachments: AttachmentRow[] }>(`/api/complaints/${id}/attachments`),
+  });
+
+  const uploadMut = useMutation({
+    mutationFn: (file: File) => {
+      const form = new FormData();
+      form.append('file', file);
+      return api.upload(`/api/complaints/${id}/attachments`, form);
+    },
+    onSuccess: () => {
+      setError(null);
+      qc.invalidateQueries({ queryKey: ['attachments', id] });
+    },
+    onError: (e: unknown) => setError(e instanceof ApiError ? e.message : "Échec de l'envoi"),
+  });
+
+  const attachments = data?.attachments ?? [];
+  const storageEnabled = config?.storageEnabled ?? false;
+
+  return (
+    <Card className="p-5">
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Pièces jointes</h2>
+      {error && <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
+      {attachments.length === 0 ? (
+        <p className="text-sm text-slate-500">Aucune pièce jointe.</p>
+      ) : (
+        <ul className="space-y-2">
+          {attachments.map((a) => (
+            <li key={a.id} className="flex items-center justify-between gap-3 text-sm">
+              <a href={`/api/complaints/attachments/${a.id}/download`} className="truncate text-blue-600 hover:underline" target="_blank" rel="noreferrer">
+                {a.fileName}
+              </a>
+              <span className="shrink-0 text-xs text-slate-400">{formatSize(a.size)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {canUpload && storageEnabled && (
+        <label className="mt-3 inline-block cursor-pointer text-sm font-medium text-blue-600 hover:underline">
+          {uploadMut.isPending ? 'Envoi…' : '+ Ajouter un fichier'}
+          <input
+            type="file"
+            className="hidden"
+            disabled={uploadMut.isPending}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) uploadMut.mutate(file);
+              e.target.value = '';
+            }}
+          />
+        </label>
+      )}
+      {canUpload && !storageEnabled && (
+        <p className="mt-3 text-xs text-slate-400">Stockage des fichiers non configuré.</p>
+      )}
+    </Card>
   );
 }
 
@@ -188,7 +263,7 @@ function QualifyPanel({ id, onDone, onError }: { id: string; onDone: () => void;
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Qualifier</h2>
         {config?.aiEnabled && (
           <button onClick={() => aiMut.mutate()} disabled={aiMut.isPending} className="rounded-md bg-violet-100 px-2.5 py-1 text-xs font-medium text-violet-700 hover:bg-violet-200 disabled:opacity-50">
-            {aiMut.isPending ? 'Analyse IA…' : '✨ Suggérer (IA)'}
+            {aiMut.isPending ? 'Analyse IA…' : 'Suggérer (IA)'}
           </button>
         )}
       </div>
@@ -196,7 +271,7 @@ function QualifyPanel({ id, onDone, onError }: { id: string; onDone: () => void;
       <div className="space-y-3">
         <Field label="Catégorie">
           <select className={inputClass} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
-            <option value="">— Choisir —</option>
+            <option value="">Choisir une catégorie</option>
             {cats?.categories.map((c) => <option key={c.id} value={c.id}>{c.labelFr}</option>)}
           </select>
         </Field>
@@ -238,7 +313,7 @@ function AssignPanel({ id, onDone, onError }: { id: string; onDone: () => void; 
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Affecter</h2>
       <div className="space-y-3">
         <select className={inputClass} value={assignedToId} onChange={(e) => setAssignedToId(e.target.value)}>
-          <option value="">— Conseiller —</option>
+          <option value="">Sélectionner un conseiller</option>
           {data?.assignees.map((a) => <option key={a.id} value={a.id}>{a.fullName}</option>)}
         </select>
         <Button disabled={!assignedToId || mut.isPending} onClick={() => mut.mutate()} className="w-full">

@@ -53,7 +53,7 @@ const schema = z.object({
 const parsed = schema.safeParse(process.env);
 
 if (!parsed.success) {
-  console.error('❌ Configuration d\'environnement invalide :');
+  console.error('Configuration d\'environnement invalide :');
   console.error(parsed.error.flatten().fieldErrors);
   throw new Error('Variables d\'environnement manquantes ou invalides (voir .env.example)');
 }
@@ -62,6 +62,9 @@ export const env = parsed.data;
 
 /** Indique si l'envoi d'email réel est configuré (sinon mode simulation). */
 export const isEmailConfigured = Boolean(env.EMAIL_HOST && env.EMAIL_USER && env.EMAIL_PASS);
+
+/** Indique si le stockage des pièces jointes (Supabase Storage) est configuré. */
+export const isStorageConfigured = Boolean(env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY);
 
 /** Délai SLA (heures) en fonction de la priorité. */
 export const slaHoursByPriority: Record<'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW', number> = {

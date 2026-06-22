@@ -1,5 +1,5 @@
 /**
- * Moteur d'escalade (Phase 3).
+ * Moteur d'escalade.
  *
  * Trois déclencheurs :
  *   - SLA_BREACH   : sla_due_at dépassé (balayage périodique).
@@ -99,6 +99,11 @@ export const escalationService = {
   async notifyPriority(complaintId: string): Promise<void> {
     const complaint = await prisma.complaint.findUnique({ where: { id: complaintId } });
     if (!complaint || (complaint.priority !== 'CRITICAL' && complaint.priority !== 'HIGH')) return;
+
+    // Anti-doublon : une seule alerte PRIORITY par réclamation (la qualification
+    // peut être rejouée sans générer d'alertes répétées).
+    const existing = await prisma.escalation.findFirst({ where: { complaintId, reason: 'PRIORITY' } });
+    if (existing) return;
 
     const target = await prisma.user.findFirst({ where: { role: 'RESPONSABLE_SAV', active: true } });
     await prisma.escalation.create({

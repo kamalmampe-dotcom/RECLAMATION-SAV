@@ -1,7 +1,7 @@
 /**
  * NotificationService — service CENTRALISÉ d'envoi d'emails.
  *
- * Règle d'architecture (cahier des charges) : aucun controller n'envoie d'email
+ * Règle d'architecture : aucun controller n'envoie d'email
  * directement. Tout passe par ce service, qui :
  *   - résout les destinataires,
  *   - rend le template,

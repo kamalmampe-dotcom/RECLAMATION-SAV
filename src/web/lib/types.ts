@@ -1,4 +1,4 @@
-// Types partagés du frontend — miroir des réponses de l'API.
+// Types partagés du frontend - miroir des réponses de l'API.
 
 export type Role =
   | 'ADMIN'

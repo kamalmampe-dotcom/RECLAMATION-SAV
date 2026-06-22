@@ -1,5 +1,5 @@
 /**
- * Service IA (optionnel — Phase 7).
+ * Service IA (optionnel).
  * Classification automatique d'une réclamation : suggère catégorie, causes racines,
  * priorité et résumé, à partir de la description. Les suggestions sont contraintes
  * à la taxonomie NORMALISÉE (codes existants en base) puis mappées sur les IDs.

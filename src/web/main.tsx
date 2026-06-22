@@ -7,8 +7,14 @@ import { AuthProvider } from './auth/AuthContext.tsx';
 import './index.css';
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false, staleTime: 30_000 } },
+  defaultOptions: {
+    queries: { retry: 1, refetchOnWindowFocus: false, staleTime: 60_000, gcTime: 5 * 60_000 },
+  },
 });
+
+// Données de référence quasi immuables (sites, catégories, causes, config) :
+// on évite de les recharger à chaque navigation.
+export const STABLE = { staleTime: Infinity } as const;
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

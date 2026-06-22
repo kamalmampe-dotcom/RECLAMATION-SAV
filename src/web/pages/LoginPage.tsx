@@ -31,7 +31,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
         <div className="mb-6 text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-lg font-bold text-white">CF</div>
-          <h1 className="text-lg font-semibold">CFAO Automotive — SAV</h1>
+          <h1 className="text-lg font-semibold">CFAO Automotive - SAV</h1>
           <p className="text-sm text-slate-500">Portail de gestion des réclamations</p>
         </div>
         <form onSubmit={onSubmit} className="space-y-4">

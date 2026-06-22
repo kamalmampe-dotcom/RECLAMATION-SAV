@@ -60,7 +60,7 @@ async function seedSites() {
       create: s,
     });
   }
-  console.log(`✅ ${SITES.length} sites`);
+  console.log(`${SITES.length} sites`);
 }
 
 async function seedTaxonomy() {
@@ -80,7 +80,7 @@ async function seedTaxonomy() {
       create: { ...rc, sortOrder: i },
     });
   }
-  console.log(`✅ ${CATEGORIES.length} catégories + ${ROOT_CAUSES.length} causes racines`);
+  console.log(`${CATEGORIES.length} catégories + ${ROOT_CAUSES.length} causes racines`);
 }
 
 async function upsertUser(params: {
@@ -139,20 +139,20 @@ async function seedUsers() {
   }
 
   const count = await prisma.user.count();
-  console.log(`✅ ${count} utilisateurs (mot de passe par défaut : "${DEFAULT_PASSWORD}")`);
+  console.log(`${count} utilisateurs (mot de passe par défaut : "${DEFAULT_PASSWORD}")`);
 }
 
 async function main() {
-  console.log('🌱 Seed CFAO SAV…');
+  console.log('Seed CFAO SAV…');
   await seedSites();
   await seedTaxonomy();
   await seedUsers();
-  console.log('✅ Seed terminé.');
+  console.log('Seed terminé.');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Échec du seed :', e);
+    console.error('Échec du seed :', e);
     process.exit(1);
   })
   .finally(async () => {

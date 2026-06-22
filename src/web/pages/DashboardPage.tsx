@@ -48,8 +48,6 @@ export default function DashboardPage() {
           {items.length === 0 && <li className="py-6 text-center text-slate-400">Aucune réclamation pour le moment.</li>}
         </ul>
       </Card>
-
-      <p className="text-xs text-slate-400">Tableau de bord KPI complet (délai moyen, NPS, top causes, performance par site) — livré en Phase 6.</p>
     </div>
   );
 }

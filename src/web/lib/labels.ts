@@ -49,6 +49,6 @@ export const PRIORITY_COLORS: Record<Priority, string> = {
 };
 
 export function formatDate(iso: string | null): string {
-  if (!iso) return '—';
+  if (!iso) return '-';
   return new Date(iso).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }

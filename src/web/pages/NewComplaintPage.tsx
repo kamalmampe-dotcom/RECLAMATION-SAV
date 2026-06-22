@@ -52,7 +52,7 @@ export default function NewComplaintPage() {
             <Field label="Email client"><input type="email" className={inputClass} value={form.clientEmail} onChange={set('clientEmail')} /></Field>
             <Field label="Site *">
               <select required className={inputClass} value={form.siteId} onChange={set('siteId')}>
-                <option value="">— Choisir un site —</option>
+                <option value="">Sélectionner un site</option>
                 {sitesData?.sites.map((s) => <option key={s.id} value={s.id}>{s.city} ({s.code})</option>)}
               </select>
             </Field>

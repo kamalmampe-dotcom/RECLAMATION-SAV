@@ -46,7 +46,7 @@ export default function UsersPage() {
                   <td className="px-4 py-3 font-medium">{u.fullName}</td>
                   <td className="px-4 py-3 text-slate-600">{u.email}</td>
                   <td className="px-4 py-3">{ROLE_LABELS[u.role]}</td>
-                  <td className="px-4 py-3">{u.site?.city ?? '—'}</td>
+                  <td className="px-4 py-3">{u.site?.city ?? '-'}</td>
                   <td className="px-4 py-3">
                     <span className={`rounded-full px-2 py-0.5 text-xs ${u.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>
                       {u.active ? 'Actif' : 'Inactif'}
@@ -97,7 +97,7 @@ function CreateUserForm({ sites, onDone }: { sites: SiteRef[]; onDone: () => voi
         </Field>
         <Field label="Site">
           <select className={inputClass} value={form.siteId} onChange={set('siteId')}>
-            <option value="">— Aucun (national) —</option>
+            <option value="">Aucun (rattachement national)</option>
             {sites.map((s) => <option key={s.id} value={s.id}>{s.city} ({s.code})</option>)}
           </select>
         </Field>
