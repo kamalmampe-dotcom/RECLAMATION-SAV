@@ -8,6 +8,7 @@ import { env } from './src/lib/env.js';
 import { logger } from './src/lib/logger.js';
 import { buildSessionMiddleware } from './src/lib/session.js';
 import { errorHandler, notFoundHandler } from './src/middleware/errorHandler.js';
+import { startEscalationJob } from './src/jobs/escalationJob.js';
 
 import authRoutes from './src/routes/auth.js';
 import userRoutes from './src/routes/users.js';
@@ -46,6 +47,7 @@ function startServer() {
 
   app.listen(env.PORT, () => {
     logger.info(`Serveur démarré sur http://localhost:${env.PORT} (${env.NODE_ENV})`);
+    startEscalationJob();
   });
 }
 

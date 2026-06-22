@@ -8,8 +8,8 @@ professionnel multi-site (PostgreSQL, React). Livraison par phases.
 | **0 — Socle** | Nettoyage repo, Prisma, config Zod, logger, structure | ✅ Fait |
 | **1 — Migration DB** | Schéma PostgreSQL complet + migration `0_init` + seed (6 sites, taxonomie, comptes) | ✅ Fait |
 | **2 — RBAC + Auth** | Sessions PostgreSQL, suppression de la faille `x-user-id`, RBAC par rôle + site, validation Zod, couche services/repositories Prisma, rôle ADMIN | ✅ Fait |
-| **3 — Workflow + Escalade** | Moteur d'escalade SLA/priorité/hiérarchie (node-cron) + transitions enrichies | ⏳ À venir |
-| **4 — NotificationService** | Service email centralisé, templates, `email_logs` | ⏳ À venir |
+| **3 — Workflow + Escalade** | Moteur d'escalade SLA/priorité/hiérarchie (node-cron) + transitions enrichies | ✅ Fait |
+| **4 — NotificationService** | Service email centralisé, templates, `email_logs` | ✅ Fait |
 | **5 — Frontend React** | 6 dashboards par rôle + saisie téléconseillère | ⏳ À venir |
 | **6 — KPI Dashboard** | Volume, délai moyen, taux escalade, NPS, top causes, perf/site | ⏳ À venir |
 | **7 — IA (optionnel)** | Suggestion catégorie/causes, résumé client | ⏳ À venir |
@@ -35,10 +35,30 @@ professionnel multi-site (PostgreSQL, React). Livraison par phases.
 `/api/health` + garde RBAC (401) ✅.
 
 **Reporté aux phases suivantes :**
-- Moteur d'escalade automatique (node-cron) → Phase 3.
-- `NotificationService` centralisé (emails) → Phase 4. *(Les points d'accroche `TODO`
-  sont déjà posés dans `complaintService`.)*
-- Frontend React → Phase 5.
+- Frontend React (dashboards par rôle) → Phase 5.
+- KPI dashboard (agrégations) → Phase 6.
+- IA (classification, suggestions, résumé) → Phase 7.
+
+## État Phases 3 & 4 (escalade + notifications)
+
+**Phase 3 — Escalade automatique :**
+- `escalationService` : escalade unitaire (incrémente le niveau, repousse le SLA,
+  crée une ligne `escalations`, notifie, audite).
+- Résolution du destinataire par remontée de la chaîne `manager_id`, repli
+  responsable SAV → direction. Niveau plafonné à 3.
+- Trois déclencheurs : **SLA** (balayage `node-cron` toutes les `ESCALATION_CRON_MINUTES`),
+  **priorité** (alerte immédiate HIGH/CRITICAL à la qualification), **hiérarchique**
+  (mécanisme de remontée).
+- Endpoint de supervision : `POST /api/complaints/ops/escalation-sweep`.
+
+**Phase 4 — NotificationService centralisé :**
+- Service **unique** (`notificationService`) : aucun controller n'envoie d'email.
+- Emails sur : **création**, **affectation**, **changement de statut**, **escalade**,
+  **clôture**, **déclenchement NPS**.
+- Transport Nodemailer/Brevo (`src/lib/mailer.ts`) ; **mode simulation** si SMTP absent.
+- **Chaque envoi journalisé** dans `email_logs` (SENT/FAILED + erreur).
+- Templates HTML factorisés (`src/notifications/templates.ts`).
+- NPS : `NpsSurvey` créée à la clôture + email d'enquête envoyé.
 
 ## Ce qu'il reste à fournir (côté client)
 

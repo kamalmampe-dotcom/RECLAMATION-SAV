@@ -6,12 +6,16 @@ import {
   getComplaint,
   listComplaints,
   qualifyComplaint,
+  runEscalationSweep,
   updateComplaintStatus,
 } from '../controllers/complaintController.js';
 
 const router = Router();
 
 router.use(requireAuth);
+
+// Supervision : déclenchement manuel du balayage d'escalade (avant les routes /:id).
+router.post('/ops/escalation-sweep', requirePermission('KPI_VIEW'), runEscalationSweep);
 
 router.get('/', requirePermission('COMPLAINT_VIEW'), listComplaints);
 router.post('/', requirePermission('COMPLAINT_CREATE'), createComplaint);

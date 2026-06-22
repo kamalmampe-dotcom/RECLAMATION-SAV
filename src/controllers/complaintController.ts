@@ -3,6 +3,7 @@
  */
 import type { Request, Response } from 'express';
 import { complaintService } from '../services/complaintService.js';
+import { escalationService } from '../services/escalationService.js';
 import {
   assignComplaintSchema,
   createComplaintSchema,
@@ -57,4 +58,10 @@ export const updateComplaintStatus = asyncHandler(async (req: Request, res: Resp
   const actor = currentUser(req)!;
   const complaint = await complaintService.changeStatus(req.params.id, status, comment, actor, req.ip);
   res.json({ complaint });
+});
+
+/** Déclenche manuellement le balayage d'escalade SLA (supervision). */
+export const runEscalationSweep = asyncHandler(async (_req: Request, res: Response) => {
+  const escalated = await escalationService.runSweep();
+  res.json({ escalated });
 });

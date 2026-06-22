@@ -8,6 +8,8 @@ import type { ComplaintStatus, Prisma, Priority } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { complaintRepository } from '../repositories/complaintRepository.js';
 import { auditService } from './auditService.js';
+import { notificationService } from './notificationService.js';
+import { escalationService } from './escalationService.js';
 import { buildComplaintReference } from '../lib/reference.js';
 import { slaHoursByPriority } from '../lib/env.js';
 import { complaintVisibilityWhere, type SessionUser } from '../lib/rbac.js';
@@ -72,7 +74,7 @@ export const complaintService = {
       ip,
       details: { reference, siteCode: site.code },
     });
-    // TODO Phase 4 : notificationService.complaintCreated(complaint)
+    await notificationService.complaintCreated(complaint.id);
     return complaint;
   },
 
@@ -139,6 +141,8 @@ export const complaintService = {
       ip,
       details: { priority: input.priority, rootCauses: input.rootCauseIds.length },
     });
+    // Escalade basée sur la priorité : alerte immédiate pour HIGH/CRITICAL.
+    await escalationService.notifyPriority(id);
     return updated;
   },
 
@@ -166,7 +170,7 @@ export const complaintService = {
       ip,
       details: { assignedToId },
     });
-    // TODO Phase 4 : notificationService.complaintAssigned(updated, assignee)
+    await notificationService.complaintAssigned(id, assignee.email, assignee.fullName);
     return updated;
   },
 
@@ -200,8 +204,24 @@ export const complaintService = {
       ip,
       details: { from: complaint.status, to: status },
     });
-    // TODO Phase 4 : notificationService.statusChanged(updated)
-    // TODO Phase 4/5 : si CLOSED -> déclenchement enquête NPS
+
+    // Notifie le conseiller affecté et la téléconseillère créatrice.
+    const recipients = [complaint.assignedTo?.email, complaint.createdBy?.email].filter(
+      (e): e is string => Boolean(e),
+    );
+    await notificationService.statusChanged(id, status, recipients);
+
+    // Clôture : email de clôture au client + déclenchement de l'enquête NPS.
+    if (status === 'CLOSED') {
+      await prisma.npsSurvey.upsert({
+        where: { complaintId: id },
+        update: { sentAt: new Date() },
+        create: { complaintId: id, sentAt: new Date() },
+      });
+      await notificationService.complaintClosed(id);
+      await notificationService.npsTriggered(id);
+      await auditService.record({ action: 'NPS_TRIGGERED', entity: 'Complaint', entityId: id, complaintId: id, userId: actor.userId, ip });
+    }
     return updated;
   },
 };

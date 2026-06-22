@@ -95,6 +95,11 @@ exigent une session ; les actions sont filtrées par RBAC (rôle + site).
 | `PATCH` | `/api/complaints/:id/qualify` | CRM_MANAGER |
 | `PATCH` | `/api/complaints/:id/assign` | CHEF_ATELIER / RESPONSABLE_SAV |
 | `PATCH` | `/api/complaints/:id/status` | CONSEILLER_SAV / … |
+| `POST` | `/api/complaints/ops/escalation-sweep` | ADMIN / DIRECTION / RESPONSABLE_SAV |
+
+Notifications email automatiques (via `NotificationService`, journalisées dans
+`email_logs`) sur : création, affectation, changement de statut, escalade, clôture, NPS.
+Escalade automatique par `node-cron` (`ENABLE_JOBS=true`).
 
 ## Documentation
 

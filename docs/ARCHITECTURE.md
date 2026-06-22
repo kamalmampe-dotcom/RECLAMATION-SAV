@@ -65,7 +65,7 @@ Requête HTTP
 [CLOSED] clôture + déclenchement enquête NPS
 ```
 
-### Escalade automatique (Phase 3)
+### Escalade automatique (Phase 3 — fait)
 
 Trois déclencheurs combinés, évalués par un job `node-cron` (intervalle
 `ESCALATION_CRON_MINUTES`) :
@@ -86,12 +86,14 @@ notifie par email, journalise dans `audit_logs`.
 | MEDIUM | 72 h |
 | LOW | 120 h |
 
-## Notifications (NotificationService — Phase 4)
+## Notifications (NotificationService — Phase 4 — fait)
 
-Service **unique** centralisant tout envoi d'email (Nodemailer/Brevo). Émet sur :
-création, changement de statut, escalade, clôture, déclenchement NPS. Chaque envoi
-est tracé dans `email_logs` (statut `SENT`/`FAILED` + erreur éventuelle). Si le SMTP
-n'est pas configuré, bascule en **mode simulation** (logs) sans bloquer le workflow.
+Service **unique** (`src/services/notificationService.ts`) centralisant tout envoi
+d'email (Nodemailer/Brevo). **Aucun controller n'envoie d'email directement.** Émet
+sur : création, affectation, changement de statut, escalade, clôture, déclenchement
+NPS. Chaque envoi est tracé dans `email_logs` (statut `SENT`/`FAILED` + erreur). Si le
+SMTP n'est pas configuré, bascule en **mode simulation** (logs) sans bloquer le workflow.
+Templates HTML factorisés dans `src/notifications/templates.ts`.
 
 ## Sécurité (Phase 2 — fait)
 
