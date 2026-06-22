@@ -66,6 +66,7 @@ Mot de passe par défaut : `Cfao@Sav2026` (à changer en production via `SEED_DE
 
 | Rôle | Email |
 |---|---|
+| **Admin (système)** | `admin@cfao-sav.cm` |
 | Direction | `direction@cfao-sav.cm` |
 | Responsable SAV | `responsable.sav@cfao-sav.cm` |
 | CRM Manager | `crm.manager@cfao-sav.cm` |
@@ -75,6 +76,25 @@ Mot de passe par défaut : `Cfao@Sav2026` (à changer en production via `SEED_DE
 
 Codes sites : `dla` (Douala), `yde` (Yaoundé), `baf` (Bafoussam), `bta` (Bertoua),
 `gra` (Garoua), `nga` (Ngaoundéré).
+
+## API (état actuel)
+
+Auth par session (cookie). Toutes les routes `/api/*` (hors `auth/login` et `health`)
+exigent une session ; les actions sont filtrées par RBAC (rôle + site).
+
+| Méthode | Endpoint | Permission |
+|---|---|---|
+| `GET` | `/api/health` | public |
+| `POST` | `/api/auth/login` | public |
+| `POST` | `/api/auth/logout` | authentifié |
+| `GET` | `/api/auth/me` | authentifié |
+| `GET` | `/api/reference/{sites,categories,root-causes}` | authentifié |
+| `GET/POST` | `/api/users` · `PATCH /api/users/:id` | ADMIN |
+| `GET/POST` | `/api/complaints` | view / create |
+| `GET` | `/api/complaints/:id` | view (scopé site) |
+| `PATCH` | `/api/complaints/:id/qualify` | CRM_MANAGER |
+| `PATCH` | `/api/complaints/:id/assign` | CHEF_ATELIER / RESPONSABLE_SAV |
+| `PATCH` | `/api/complaints/:id/status` | CONSEILLER_SAV / … |
 
 ## Documentation
 

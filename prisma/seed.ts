@@ -120,6 +120,9 @@ async function upsertUser(params: {
 async function seedUsers() {
   const hash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
 
+  // --- Administrateur système (accès global) ---
+  await upsertUser({ email: 'admin@cfao-sav.cm', fullName: 'Administrateur Système', role: 'ADMIN', hash });
+
   // --- Comptes globaux (siège), dans l'ordre hiérarchique ---
   await upsertUser({ email: 'direction@cfao-sav.cm', fullName: 'Direction Réseau', role: 'DIRECTION', hash });
   await upsertUser({ email: 'responsable.sav@cfao-sav.cm', fullName: 'Responsable SAV Réseau', role: 'RESPONSABLE_SAV', hash, managerEmail: 'direction@cfao-sav.cm' });

@@ -19,6 +19,7 @@ datasource db {
 // -----------------------------------------------------------------------------
 
 enum Role {
+  ADMIN // administration système : utilisateurs, sites, configuration (accès global)
   TELECONSEILLERE // point d'entrée unique : création des tickets
   CRM_MANAGER // qualification
   CONSEILLER_SAV // traitement

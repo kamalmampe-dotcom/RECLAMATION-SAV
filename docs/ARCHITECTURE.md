@@ -93,14 +93,17 @@ création, changement de statut, escalade, clôture, déclenchement NPS. Chaque 
 est tracé dans `email_logs` (statut `SENT`/`FAILED` + erreur éventuelle). Si le SMTP
 n'est pas configuré, bascule en **mode simulation** (logs) sans bloquer le workflow.
 
-## Sécurité (Phase 2)
+## Sécurité (Phase 2 — fait)
 
-- **RBAC** par rôle **et** par site (un conseiller ne voit que son site).
-- Auth par session serveur (cookie httpOnly), store PostgreSQL (`connect-pg-simple`).
-  > ⚠️ Le middleware hérité fait confiance aux en-têtes `x-user-id` — **à supprimer**
-  > en Phase 2 (faille d'usurpation d'identité).
-- Validation backend stricte (Zod) sur toutes les entrées.
-- `audit_logs` immuable (append-only) pour la conformité.
+- **RBAC** par rôle **et** par site (`src/lib/rbac.ts` : matrice de permissions +
+  portée de visibilité). Un chef d'atelier / conseiller ne voit que son site.
+- Auth par **session serveur** (cookie httpOnly, `sameSite=lax`, `secure` en prod),
+  store PostgreSQL (`connect-pg-simple`). Mots de passe **bcrypt**.
+  > ✅ L'ancien middleware qui faisait confiance aux en-têtes `x-user-id`
+  > (usurpation d'identité) a été **supprimé**.
+- Validation backend stricte (**Zod**) sur toutes les entrées + gestion d'erreurs
+  centralisée (`src/middleware/errorHandler.ts`).
+- `audit_logs` immuable (append-only) alimenté par `auditService` sur chaque mutation.
 
 ## Hébergement cible
 
