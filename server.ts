@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -16,6 +17,7 @@ import userRoutes from './src/routes/users.js';
 import complaintRoutes from './src/routes/complaints.js';
 import referenceRoutes from './src/routes/reference.js';
 import kpiRoutes from './src/routes/kpi.js';
+import npsRoutes from './src/routes/nps.js';
 
 const currentDir =
   typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
@@ -24,6 +26,10 @@ function startServer() {
   const app = express();
 
   app.set('trust proxy', 1);
+  // En-têtes de sécurité HTTP. CSP désactivée ici car la SPA (Vite) est servie
+  // depuis la même origine avec des styles/scripts inline ; l'activer nécessiterait
+  // une politique dédiée.
+  app.use(helmet({ contentSecurityPolicy: false }));
   app.use(cors({ origin: env.APP_URL, credentials: true }));
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
@@ -36,6 +42,7 @@ function startServer() {
   app.use('/api/complaints', complaintRoutes);
   app.use('/api/reference', referenceRoutes);
   app.use('/api/kpi', kpiRoutes);
+  app.use('/api/nps', npsRoutes);
 
   // 404 JSON pour les routes /api inconnues
   app.use('/api', notFoundHandler);

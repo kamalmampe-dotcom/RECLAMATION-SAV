@@ -28,6 +28,11 @@ export const userRepository = {
     return prisma.user.findUnique({ where: { id }, select: safeSelect });
   },
 
+  /** Inclut le hash du mot de passe — réservé au changement de mot de passe. */
+  findByIdWithSecret(id: string) {
+    return prisma.user.findUnique({ where: { id } });
+  },
+
   list(filter: { siteId?: string; role?: Role; active?: boolean } = {}) {
     return prisma.user.findMany({
       where: {

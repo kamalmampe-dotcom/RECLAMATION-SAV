@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout.tsx';
 import { ProtectedRoute } from './components/ProtectedRoute.tsx';
 import LoginPage from './pages/LoginPage.tsx';
+import NpsPage from './pages/NpsPage.tsx';
 import DashboardPage from './pages/DashboardPage.tsx';
 import ComplaintsPage from './pages/ComplaintsPage.tsx';
 import NewComplaintPage from './pages/NewComplaintPage.tsx';
@@ -25,6 +26,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/nps/:id" element={<NpsPage />} />
       <Route path="/" element={<Protected><DashboardPage /></Protected>} />
       <Route path="/complaints" element={<Protected><ComplaintsPage /></Protected>} />
       <Route path="/complaints/new" element={<Protected roles={['TELECONSEILLERE', 'ADMIN']}><NewComplaintPage /></Protected>} />

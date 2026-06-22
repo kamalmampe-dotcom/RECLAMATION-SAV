@@ -5,19 +5,8 @@ import { api, ApiError } from '../lib/api.ts';
 import { Button, Card, Field, PriorityBadge, StatusBadge, inputClass } from '../components/ui.tsx';
 import { PRIORITY_LABELS, ROLE_LABELS, STATUS_LABELS, formatDate } from '../lib/labels.ts';
 import { useAuth } from '../auth/AuthContext.tsx';
+import { ALLOWED_TRANSITIONS } from '@/src/lib/complaintWorkflow.ts';
 import type { Category, ComplaintDetail, ComplaintStatus, Priority, RootCause } from '../lib/types.ts';
-
-const ALLOWED_TRANSITIONS: Record<ComplaintStatus, ComplaintStatus[]> = {
-  NEW: ['CANCELLED'],
-  QUALIFIED: ['CANCELLED'],
-  ASSIGNED: ['IN_PROGRESS', 'CANCELLED'],
-  IN_PROGRESS: ['PENDING_PARTS', 'ESCALATED', 'RESOLVED', 'CANCELLED'],
-  PENDING_PARTS: ['IN_PROGRESS', 'ESCALATED', 'RESOLVED', 'CANCELLED'],
-  ESCALATED: ['IN_PROGRESS', 'RESOLVED', 'CANCELLED'],
-  RESOLVED: ['CLOSED', 'IN_PROGRESS'],
-  CLOSED: [],
-  CANCELLED: [],
-};
 
 export default function ComplaintDetailPage() {
   const { id = '' } = useParams();
@@ -94,6 +83,8 @@ export default function ComplaintDetailPage() {
             )}
           </Card>
 
+          <AttachmentsPanel id={id} canUpload={canTreat} />
+
           <Card className="p-5">
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Historique</h2>
             <ol className="space-y-3">
@@ -144,6 +135,90 @@ export default function ComplaintDetailPage() {
   );
 }
 
+interface AttachmentRow {
+  id: string;
+  fileName: string;
+  mimeType: string | null;
+  size: number | null;
+  createdAt: string;
+  uploadedBy: { fullName: string } | null;
+}
+
+function formatSize(bytes: number | null): string {
+  if (!bytes) return '';
+  if (bytes < 1024) return `${bytes} o`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} Ko`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
+}
+
+function AttachmentsPanel({ id, canUpload }: { id: string; canUpload: boolean }) {
+  const qc = useQueryClient();
+  const [error, setError] = useState<string | null>(null);
+  const { data: config } = useQuery({
+    queryKey: ['config'],
+    queryFn: () => api.get<{ aiEnabled: boolean; storageEnabled: boolean }>('/api/reference/config'),
+  });
+  const { data } = useQuery({
+    queryKey: ['attachments', id],
+    queryFn: () => api.get<{ attachments: AttachmentRow[] }>(`/api/complaints/${id}/attachments`),
+  });
+
+  const uploadMut = useMutation({
+    mutationFn: (file: File) => {
+      const form = new FormData();
+      form.append('file', file);
+      return api.upload(`/api/complaints/${id}/attachments`, form);
+    },
+    onSuccess: () => {
+      setError(null);
+      qc.invalidateQueries({ queryKey: ['attachments', id] });
+    },
+    onError: (e: unknown) => setError(e instanceof ApiError ? e.message : "Échec de l'envoi"),
+  });
+
+  const attachments = data?.attachments ?? [];
+  const storageEnabled = config?.storageEnabled ?? false;
+
+  return (
+    <Card className="p-5">
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Pièces jointes</h2>
+      {error && <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
+      {attachments.length === 0 ? (
+        <p className="text-sm text-slate-500">Aucune pièce jointe.</p>
+      ) : (
+        <ul className="space-y-2">
+          {attachments.map((a) => (
+            <li key={a.id} className="flex items-center justify-between gap-3 text-sm">
+              <a href={`/api/complaints/attachments/${a.id}/download`} className="truncate text-blue-600 hover:underline" target="_blank" rel="noreferrer">
+                {a.fileName}
+              </a>
+              <span className="shrink-0 text-xs text-slate-400">{formatSize(a.size)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {canUpload && storageEnabled && (
+        <label className="mt-3 inline-block cursor-pointer text-sm font-medium text-blue-600 hover:underline">
+          {uploadMut.isPending ? 'Envoi…' : '+ Ajouter un fichier'}
+          <input
+            type="file"
+            className="hidden"
+            disabled={uploadMut.isPending}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) uploadMut.mutate(file);
+              e.target.value = '';
+            }}
+          />
+        </label>
+      )}
+      {canUpload && !storageEnabled && (
+        <p className="mt-3 text-xs text-slate-400">Stockage des fichiers non configuré.</p>
+      )}
+    </Card>
+  );
+}
+
 function Info({ label, value }: { label: string; value: string }) {
   return (
     <div>
@@ -188,7 +263,7 @@ function QualifyPanel({ id, onDone, onError }: { id: string; onDone: () => void;
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Qualifier</h2>
         {config?.aiEnabled && (
           <button onClick={() => aiMut.mutate()} disabled={aiMut.isPending} className="rounded-md bg-violet-100 px-2.5 py-1 text-xs font-medium text-violet-700 hover:bg-violet-200 disabled:opacity-50">
-            {aiMut.isPending ? 'Analyse IA…' : '✨ Suggérer (IA)'}
+            {aiMut.isPending ? 'Analyse IA…' : 'Suggérer (IA)'}
           </button>
         )}
       </div>

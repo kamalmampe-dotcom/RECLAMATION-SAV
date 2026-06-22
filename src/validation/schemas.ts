@@ -33,6 +33,11 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Mot de passe requis'),
 });
 
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Mot de passe actuel requis'),
+  newPassword: z.string().min(8, 'Le nouveau mot de passe doit faire au moins 8 caractères'),
+});
+
 // --- Utilisateurs (administration) ------------------------------------------
 export const createUserSchema = z.object({
   email: z.string().email(),
@@ -90,8 +95,15 @@ export const listComplaintsQuerySchema = z.object({
   status: ComplaintStatusEnum.optional(),
   priority: PriorityEnum.optional(),
   siteId: z.string().uuid().optional(),
+  q: z.string().trim().max(120).optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(200).default(50),
+});
+
+// --- NPS (enquête publique) -------------------------------------------------
+export const npsSubmitSchema = z.object({
+  score: z.coerce.number().int().min(0).max(10),
+  comment: z.string().trim().max(2000).optional(),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

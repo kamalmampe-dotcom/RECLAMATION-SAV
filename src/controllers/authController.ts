@@ -5,7 +5,7 @@ import type { Request, Response } from 'express';
 import { authService } from '../services/authService.js';
 import { auditService } from '../services/auditService.js';
 import { userRepository } from '../repositories/userRepository.js';
-import { loginSchema } from '../validation/schemas.js';
+import { changePasswordSchema, loginSchema } from '../validation/schemas.js';
 import { asyncHandler, unauthorized } from '../lib/errors.js';
 import { currentUser } from '../middleware/auth.js';
 
@@ -43,4 +43,19 @@ export const me = asyncHandler(async (req: Request, res: Response) => {
   if (!session) throw unauthorized();
   const user = await userRepository.findById(session.userId);
   res.json({ user });
+});
+
+export const changePassword = asyncHandler(async (req: Request, res: Response) => {
+  const session = currentUser(req);
+  if (!session) throw unauthorized();
+  const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
+  await authService.changePassword(session.userId, currentPassword, newPassword);
+  await auditService.record({
+    action: 'PASSWORD_CHANGED',
+    entity: 'User',
+    entityId: session.userId,
+    userId: session.userId,
+    ip: req.ip,
+  });
+  res.json({ success: true });
 });

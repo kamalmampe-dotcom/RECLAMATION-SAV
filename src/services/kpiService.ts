@@ -1,5 +1,5 @@
 /**
- * Service KPI — agrégations pour le pilotage (Phase 6).
+ * Service KPI — agrégations pour le pilotage.
  * Indicateurs : volume, délai moyen de résolution, taux d'escalade, NPS,
  * top causes racines, performance par site, distribution des statuts.
  */

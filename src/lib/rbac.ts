@@ -10,7 +10,7 @@ export const GLOBAL_VISIBILITY_ROLES: Role[] = [
   'DIRECTION',
   'RESPONSABLE_SAV',
   'CRM_MANAGER',
-  'TELECONSEILLERE', // point d'entrée unique : visibilité réseau (cahier des charges)
+  'TELECONSEILLERE', // point d'entrée unique : visibilité réseau
 ];
 
 /** Rôles restreints à la visibilité de leur propre site. */
