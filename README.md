@@ -1,11 +1,26 @@
-<div align="center">
+# Cobail Auto - SAV & Réclamations
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+Application complète de gestion des réclamations clients pour la société Cobail Auto.
 
-  <h1>Built with AI Studio</h2>
+## Stack Technique
+- Backend: Node.js, Express
+- Base de données: SQLite
+- Frontend: HTML/CSS/JS (Vanilla)
+- Authentification: express-session (Cookies) + bcryptjs
+- Notifications: Nodemailer
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## Scripts
+- \`npm run init\` : Initialise la base de données et crée les 6 comptes par défaut.
+- \`npm run dev\` : Démarre le serveur en mode développement (sur le port 3000).
+- \`npm run build\` : Compile le serveur pour la production.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## Comptes Pré-définis
+- **Call Center**: \`callcenter@cobail-auto.fr\` / \`CallC0b@il2024\`
+- **Chef Atelier**: \`chef.atelier@cobail-auto.fr\` / \`ChefAt3lier@2024\`
+- **Conseiller SAV**: \`conseiller.sav@cobail-auto.fr\` / \`SAV-C0ns3iller#2024\`
+- **Garantie**: \`garantie@cobail-auto.fr\` / \`G@rantieC0b@il2024\`
+- **Relation Client (CSI)**: \`csi@cobail-auto.fr\` / \`CS1-C0b@il@2024\`
+- **Direction**: \`direction@cobail-auto.fr\` / \`D1rection@C0b@il2024\`
 
-</div>
+## Démarrage rapide
+L'application est lancée et exposera les pages web à la racine (ex: \`/\`) et l'API sous \`/api/\`. Le port de développement par défaut est 3000.
