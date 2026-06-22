@@ -81,6 +81,17 @@ export interface ComplaintList {
   pageSize: number;
 }
 
+export interface KpiOverview {
+  volume: { total: number };
+  avgResolutionHours: number | null;
+  escalationRate: number;
+  nps: { score: number | null; responses: number; promoters: number; passives: number; detractors: number };
+  statusDistribution: { status: ComplaintStatus; count: number }[];
+  monthly: { month: string; count: number }[];
+  topRootCauses: { code: string; labelFr: string; count: number }[];
+  bySite: { code: string; city: string; total: number; resolved: number; escalated: number; avgResolutionHours: number | null; escalationRate: number }[];
+}
+
 export interface ComplaintDetail extends ComplaintListItem {
   clientEmail: string | null;
   vehicleVin: string | null;

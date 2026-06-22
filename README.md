@@ -101,11 +101,17 @@ exigent une session ; les actions sont filtrées par RBAC (rôle + site).
 | `PATCH` | `/api/complaints/:id/qualify` | CRM_MANAGER |
 | `PATCH` | `/api/complaints/:id/assign` | CHEF_ATELIER / RESPONSABLE_SAV |
 | `PATCH` | `/api/complaints/:id/status` | CONSEILLER_SAV / … |
+| `POST` | `/api/complaints/:id/ai-suggest` | CRM_MANAGER (si IA activée) |
 | `POST` | `/api/complaints/ops/escalation-sweep` | ADMIN / DIRECTION / RESPONSABLE_SAV |
+| `GET` | `/api/kpi/overview?days=&siteId=` | ADMIN / DIRECTION / RESPONSABLE_SAV |
 
 Notifications email automatiques (via `NotificationService`, journalisées dans
 `email_logs`) sur : création, affectation, changement de statut, escalade, clôture, NPS.
 Escalade automatique par `node-cron` (`ENABLE_JOBS=true`).
+
+> 🧪 **Test des emails sans domaine** : renseigne `TEST_NOTIFICATION_EMAIL` avec une
+> adresse perso — tous les emails y sont redirigés. Pour un envoi réel, utilise un
+> SMTP Gmail (mot de passe d'application) ou Brevo (voir `.env.example`).
 
 ## Documentation
 

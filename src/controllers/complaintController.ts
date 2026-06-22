@@ -4,6 +4,7 @@
 import type { Request, Response } from 'express';
 import { complaintService } from '../services/complaintService.js';
 import { escalationService } from '../services/escalationService.js';
+import { aiService } from '../services/aiService.js';
 import {
   assignComplaintSchema,
   createComplaintSchema,
@@ -64,4 +65,12 @@ export const updateComplaintStatus = asyncHandler(async (req: Request, res: Resp
 export const runEscalationSweep = asyncHandler(async (_req: Request, res: Response) => {
   const escalated = await escalationService.runSweep();
   res.json({ escalated });
+});
+
+/** Suggestion IA de classification (catégorie, causes, priorité, résumé). */
+export const aiSuggest = asyncHandler(async (req: Request, res: Response) => {
+  const actor = currentUser(req)!;
+  const complaint = await complaintService.getById(req.params.id, actor);
+  const suggestion = await aiService.suggest(complaint.description);
+  res.json({ suggestion });
 });

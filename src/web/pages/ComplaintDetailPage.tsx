@@ -156,9 +156,11 @@ function Info({ label, value }: { label: string; value: string }) {
 function QualifyPanel({ id, onDone, onError }: { id: string; onDone: () => void; onError: (e: unknown) => void }) {
   const { data: cats } = useQuery({ queryKey: ['categories'], queryFn: () => api.get<{ categories: Category[] }>('/api/reference/categories') });
   const { data: rcs } = useQuery({ queryKey: ['rootCauses'], queryFn: () => api.get<{ rootCauses: RootCause[] }>('/api/reference/root-causes') });
+  const { data: config } = useQuery({ queryKey: ['config'], queryFn: () => api.get<{ aiEnabled: boolean }>('/api/reference/config') });
   const [categoryId, setCategoryId] = useState('');
   const [priority, setPriority] = useState<Priority>('MEDIUM');
   const [rootCauseIds, setRootCauseIds] = useState<string[]>([]);
+  const [aiSummary, setAiSummary] = useState('');
 
   const mut = useMutation({
     mutationFn: () => api.patch(`/api/complaints/${id}/qualify`, { categoryId, priority, rootCauseIds }),
@@ -166,11 +168,31 @@ function QualifyPanel({ id, onDone, onError }: { id: string; onDone: () => void;
     onError,
   });
 
+  const aiMut = useMutation({
+    mutationFn: () => api.post<{ suggestion: { categoryId: string | null; priority: Priority | null; rootCauseIds: string[]; summary: string } }>(`/api/complaints/${id}/ai-suggest`),
+    onSuccess: (r) => {
+      const s = r.suggestion;
+      if (s.categoryId) setCategoryId(s.categoryId);
+      if (s.priority) setPriority(s.priority);
+      if (s.rootCauseIds?.length) setRootCauseIds(s.rootCauseIds);
+      setAiSummary(s.summary);
+    },
+    onError,
+  });
+
   const toggle = (rid: string) => setRootCauseIds((ids) => (ids.includes(rid) ? ids.filter((x) => x !== rid) : [...ids, rid]));
 
   return (
     <Card className="p-5">
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Qualifier</h2>
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Qualifier</h2>
+        {config?.aiEnabled && (
+          <button onClick={() => aiMut.mutate()} disabled={aiMut.isPending} className="rounded-md bg-violet-100 px-2.5 py-1 text-xs font-medium text-violet-700 hover:bg-violet-200 disabled:opacity-50">
+            {aiMut.isPending ? 'Analyse IA…' : '✨ Suggérer (IA)'}
+          </button>
+        )}
+      </div>
+      {aiSummary && <div className="mb-3 rounded-lg bg-violet-50 px-3 py-2 text-xs text-violet-800">Résumé IA : {aiSummary}</div>}
       <div className="space-y-3">
         <Field label="Catégorie">
           <select className={inputClass} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>

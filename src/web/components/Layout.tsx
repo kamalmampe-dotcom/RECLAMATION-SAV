@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ListChecks, PlusCircle, Users, LogOut } from 'lucide-react';
+import { LayoutDashboard, ListChecks, PlusCircle, Users, BarChart3, LogOut } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext.tsx';
 import { ROLE_LABELS } from '../lib/labels.ts';
 import type { Role } from '../lib/types.ts';
@@ -16,6 +16,7 @@ const NAV: NavItem[] = [
   { to: '/', label: 'Tableau de bord', icon: <LayoutDashboard size={18} /> },
   { to: '/complaints/new', label: 'Nouvelle réclamation', icon: <PlusCircle size={18} />, roles: ['TELECONSEILLERE', 'ADMIN'] },
   { to: '/complaints', label: 'Réclamations', icon: <ListChecks size={18} /> },
+  { to: '/kpi', label: 'Pilotage (KPI)', icon: <BarChart3 size={18} />, roles: ['ADMIN', 'DIRECTION', 'RESPONSABLE_SAV'] },
   { to: '/admin/users', label: 'Utilisateurs', icon: <Users size={18} />, roles: ['ADMIN'] },
 ];
 

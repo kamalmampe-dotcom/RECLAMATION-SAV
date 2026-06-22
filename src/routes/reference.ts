@@ -7,9 +7,18 @@ import { requireAuth, requirePermission, currentUser } from '../middleware/auth.
 import { prisma } from '../lib/prisma.js';
 import { asyncHandler } from '../lib/errors.js';
 import { hasGlobalVisibility } from '../lib/rbac.js';
+import { aiEnabled } from '../services/aiService.js';
 
 const router = Router();
 router.use(requireAuth);
+
+// Configuration exposée au frontend (feature flags).
+router.get(
+  '/config',
+  asyncHandler(async (_req, res) => {
+    res.json({ aiEnabled });
+  }),
+);
 
 // Conseillers affectables (pour l'affectation d'une réclamation).
 router.get(

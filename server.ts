@@ -15,6 +15,7 @@ import authRoutes from './src/routes/auth.js';
 import userRoutes from './src/routes/users.js';
 import complaintRoutes from './src/routes/complaints.js';
 import referenceRoutes from './src/routes/reference.js';
+import kpiRoutes from './src/routes/kpi.js';
 
 const currentDir =
   typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
@@ -34,6 +35,7 @@ function startServer() {
   app.use('/api/users', userRoutes);
   app.use('/api/complaints', complaintRoutes);
   app.use('/api/reference', referenceRoutes);
+  app.use('/api/kpi', kpiRoutes);
 
   // 404 JSON pour les routes /api inconnues
   app.use('/api', notFoundHandler);

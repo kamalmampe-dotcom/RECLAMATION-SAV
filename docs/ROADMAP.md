@@ -11,8 +11,8 @@ professionnel multi-site (PostgreSQL, React). Livraison par phases.
 | **3 — Workflow + Escalade** | Moteur d'escalade SLA/priorité/hiérarchie (node-cron) + transitions enrichies | ✅ Fait |
 | **4 — NotificationService** | Service email centralisé, templates, `email_logs` | ✅ Fait |
 | **5 — Frontend React** | SPA React (auth, console réclamations, admin), navigation par rôle | ✅ Fait |
-| **6 — KPI Dashboard** | Volume, délai moyen, taux escalade, NPS, top causes, perf/site | ⏳ À venir |
-| **7 — IA (optionnel)** | Suggestion catégorie/causes, résumé client | ⏳ À venir |
+| **6 — KPI Dashboard** | Volume, délai moyen, taux escalade, NPS, top causes, perf/site | ✅ Fait |
+| **7 — IA (optionnel)** | Suggestion catégorie/causes/priorité + résumé client | ✅ Fait |
 | **8 — Doc + déploiement** | Doc finale, CI, déploiement Render + Supabase | ⏳ À venir |
 
 ## État actuel (fin Phase 2)
@@ -35,8 +35,25 @@ professionnel multi-site (PostgreSQL, React). Livraison par phases.
 `/api/health` + garde RBAC (401) ✅.
 
 **Reporté aux phases suivantes :**
-- KPI dashboard (agrégations) → Phase 6.
-- IA (classification, suggestions, résumé) → Phase 7.
+- Déploiement (Render + Supabase) + CI → Phase 8.
+
+## État Phases 6 & 7 (KPI + IA)
+
+**Phase 6 — KPI Dashboard :**
+- `kpiService` (agrégations Prisma + SQL) : volume, **délai moyen de résolution**,
+  **taux d'escalade**, **NPS** (promoteurs/passifs/détracteurs), **top causes
+  racines**, **performance par site**, distribution des statuts, volume mensuel.
+- Endpoint `GET /api/kpi/overview?days=&siteId=` (réservé ADMIN/DIRECTION/RESPONSABLE_SAV).
+- Page **Pilotage** (React + Recharts) : cartes + graphiques, filtre de période.
+  Chargée en lazy (code-splitting) pour alléger le bundle initial.
+
+**Phase 7 — IA (optionnel) :**
+- `aiService` (Gemini, derrière `AI_ENABLED` + `GEMINI_API_KEY`) : classification
+  d'une réclamation → **catégorie + causes racines + priorité + résumé**, contrainte
+  à la **taxonomie normalisée** (codes en base), mappée sur les IDs.
+- Endpoint `POST /api/complaints/:id/ai-suggest` (réservé qualification).
+- Flag exposé via `GET /api/reference/config` ; bouton **« ✨ Suggérer (IA) »**
+  dans le panneau de qualification (pré-remplit catégorie/priorité/causes + résumé).
 
 ## État Phase 5 (frontend React)
 

@@ -31,6 +31,9 @@ const schema = z.object({
   EMAIL_USER: z.string().optional().or(z.literal('')),
   EMAIL_PASS: z.string().optional().or(z.literal('')),
   EMAIL_FROM: z.string().default('sav@cfao.com'),
+  // Test : si défini, TOUS les emails sont redirigés vers cette adresse (utile
+  // tant qu'aucun domaine d'envoi n'est configuré). À laisser vide en production.
+  TEST_NOTIFICATION_EMAIL: z.string().email().optional().or(z.literal('')),
 
   // Escalade / SLA (heures)
   SLA_CRITICAL_HOURS: z.coerce.number().default(4),
