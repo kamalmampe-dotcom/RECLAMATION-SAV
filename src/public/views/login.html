@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <title>Connexion - CFAO Automotive</title>
+  <!-- Tailwind CSS & Google Fonts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .brand-title {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+  </style>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="apple-touch-icon" href="/icon.svg">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js');
+      });
+    }
+  </script>
+</head>
+<body class="h-full flex items-stretch overflow-hidden">
+
+  <!-- Left Hero Panel (Visual Brand Slate) -->
+  <div class="hidden lg:flex w-1/2 bg-slate-900 relative flex-col justify-between p-12 text-white">
+    <!-- Decorative Ambient Glow -->
+    <div class="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-blue-900/60 to-transparent pointer-events-none"></div>
+    <div class="absolute right-0 top-0 bottom-0 w-96 bg-gradient-to-l from-blue-500/10 to-transparent pointer-events-none"></div>
+
+    <div class="relative z-10">
+      <div class="flex items-center gap-2">
+        <span class="bg-blue-600 text-white font-bold px-3 py-1 text-sm tracking-widest rounded-lg">CFAO</span>
+        <span class="text-xs uppercase tracking-widest text-slate-400 font-bold">Automotive Group</span>
+      </div>
+    </div>
+
+    <!-- Centered Pitch -->
+    <div class="relative z-10 max-w-lg my-auto space-y-4">
+      <h1 class="brand-title text-4xl lg:text-5xl font-extrabold tracking-tight leading-none text-white">
+        Portail Réseau de Réclamations SAV
+      </h1>
+      <p class="text-slate-300 text-sm leading-relaxed">
+        Remplacer les processus Excel, e-mails et WhatsApp par une solution SaaS unifiée de niveau industriel. Connectez instantanément le Call Center, l'Atelier, les auditeurs Qualité et le Service Garantie pour améliorer l'expérience client.
+      </p>
+      
+      <!-- Key Metric Indicators -->
+      <div class="grid grid-cols-3 gap-4 pt-6 border-t border-slate-800">
+        <div>
+          <span class="block text-2xl font-bold font-mono text-blue-400">-85%</span>
+          <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Temps de traitement</span>
+        </div>
+        <div>
+          <span class="block text-2xl font-bold font-mono text-emerald-400">100%</span>
+          <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Traçabilité audit</span>
+        </div>
+        <div>
+          <span class="block text-2xl font-bold font-mono text-indigo-400">4.8/5</span>
+          <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Satisfaction client</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="relative z-10 text-slate-500 text-xs flex justify-between">
+      <span>© 2026 CFAO Group - Tous droits réservés</span>
+      <span>v1.8.4 Premium Enterprise</span>
+    </div>
+  </div>
+
+  <!-- Right Panel (Secure Login & Preset Roles) -->
+  <div class="w-full lg:w-1/2 flex flex-col justify-center items-center p-6 sm:p-12 md:p-20 bg-slate-50">
+    <div class="w-full max-w-md bg-white p-8 md:p-10 rounded-2xl shadow-xl border border-slate-200">
+      
+      <!-- Mobile Brand Header -->
+      <div class="flex lg:hidden items-center gap-2 mb-6 justify-center">
+        <span class="bg-blue-600 text-white font-bold px-3 py-1 text-sm tracking-widest rounded-lg">CFAO</span>
+        <span class="text-xs uppercase tracking-widest text-slate-600 font-bold">Automotive SAV</span>
+      </div>
+
+      <div class="text-center lg:text-left mb-6">
+        <h2 class="brand-title text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Accéder au Portail</h2>
+        <p class="text-xs text-slate-500 mt-1">Saisissez vos identifiants réseau ou utilisez un accès rapide de test.</p>
+      </div>
+
+      <!-- Main Login Form -->
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5" for="email">Adresse E-mail Professionnelle</label>
+          <input type="email" id="email" required placeholder="nom@cobail-auto.fr" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-sm bg-slate-5/50 font-sans" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5" for="password">Mot de passe réseau</label>
+          <input type="password" id="password" required placeholder="••••••••" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-sm bg-slate-5/50 font-sans" />
+        </div>
+
+        <!-- System Alerts -->
+        <p id="error-msg" class="text-xs text-red-600 font-semibold italic text-center"></p>
+
+        <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-xl transition text-sm shadow-md hover:shadow-lg">
+          Se connecter au réseau
+        </button>
+      </form>
+
+      <!-- Advanced Quick-Access Presets Selector -->
+      <div class="mt-8 pt-6 border-t border-slate-150">
+        <h3 class="text-xs font-bold text-slate-500 text-center uppercase tracking-wider mb-4">Comptes de Test par Service</h3>
+        
+        <div class="grid grid-cols-2 gap-2 text-left">
+          
+          <!-- Call Center -->
+          <button onclick="fillAndSubmit('callcenter@cobail-auto.fr', 'CallC0b@il2024')" class="p-2 border border-slate-150 rounded-xl bg-slate-50 hover:bg-blue-50 hover:border-blue-200 text-left transition duration-150 group">
+            <span class="block text-[11px] font-bold text-slate-800 group-hover:text-blue-900">Sophie Martin</span>
+            <span class="inline-block mt-0.5 text-[9px] bg-blue-100/80 text-blue-800 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">📞 Call Center</span>
+          </button>
+
+          <!-- Chef Atelier -->
+          <button onclick="fillAndSubmit('chef.atelier@cobail-auto.fr', 'ChefAt3lier@2024')" class="p-2 border border-slate-150 rounded-xl bg-slate-50 hover:bg-purple-50 hover:border-purple-200 text-left transition duration-150 group">
+            <span class="block text-[11px] font-bold text-slate-800 group-hover:text-purple-900">Pierre Dubois</span>
+            <span class="inline-block mt-0.5 text-[9px] bg-purple-100/80 text-purple-800 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">🔧 Chef Atelier</span>
+          </button>
+
+          <!-- Conseiller SAV -->
+          <button onclick="fillAndSubmit('conseiller.sav@cobail-auto.fr', 'SAV-C0ns3iller#2024')" class="p-2 border border-slate-150 rounded-xl bg-slate-50 hover:bg-amber-50 hover:border-amber-200 text-left transition duration-150 group">
+            <span class="block text-[11px] font-bold text-slate-800 group-hover:text-amber-900">Thomas Leroy</span>
+            <span class="inline-block mt-0.5 text-[9px] bg-amber-100/80 text-amber-800 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">💼 Conseiller SAV</span>
+          </button>
+
+          <!-- Garantie -->
+          <button onclick="fillAndSubmit('garantie@cobail-auto.fr', 'G@rantieC0b@il2024')" class="p-2 border border-slate-150 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:border-indigo-200 text-left transition duration-150 group">
+            <span class="block text-[11px] font-bold text-slate-800 group-hover:text-indigo-900">Marie Lambert</span>
+            <span class="inline-block mt-0.5 text-[9px] bg-indigo-100/80 text-indigo-800 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">🛡️ Garantie</span>
+          </button>
+
+          <!-- CSI / Qualité -->
+          <button onclick="fillAndSubmit('csi@cobail-auto.fr', 'CS1-C0b@il@2024')" class="p-2 border border-slate-150 rounded-xl bg-slate-50 hover:bg-teal-50 hover:border-teal-200 text-left transition duration-150 group" style="grid-column: span 2;">
+            <span class="block text-[11px] font-bold text-slate-800 group-hover:text-teal-900">Julie Petit</span>
+            <span class="inline-block mt-0.5 text-[9px] bg-teal-100/80 text-teal-800 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">🔬 Responsable Qualité / Enquêtes CSI</span>
+          </button>
+
+          <!-- Direction -->
+          <button onclick="fillAndSubmit('direction@cobail-auto.fr', 'D1rection@C0b@il2024')" class="p-2 border border-slate-150 rounded-xl bg-slate-50 hover:bg-slate-200 hover:border-slate-300 text-left transition duration-150 group" style="grid-column: span 2;">
+            <span class="block text-[11px] font-bold text-slate-800">Marc Renault</span>
+            <span class="inline-block mt-0.5 text-[9px] bg-slate-800 text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">📈 Direction (Reporting)</span>
+          </button>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/js/auth.js"></script>
+  <script>
+    function fillAndSubmit(email, pass) {
+      document.getElementById('email').value = email;
+      document.getElementById('password').value = pass;
+      document.getElementById('login-form').dispatchEvent(new Event('submit'));
+    }
+  </script>
+</body>
+</html>
