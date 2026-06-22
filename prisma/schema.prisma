@@ -1,0 +1,437 @@
+// =============================================================================
+//  CFAO Automotive — SAV / Réclamations
+//  Schéma PostgreSQL (Prisma) — Modèle métier conforme au cahier des charges
+//  Migration depuis SQLite. Entité centrale : Complaint (Réclamation).
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// -----------------------------------------------------------------------------
+//  ÉNUMÉRATIONS (valeurs normalisées)
+// -----------------------------------------------------------------------------
+
+enum Role {
+  ADMIN // administration système : utilisateurs, sites, configuration (accès global)
+  TELECONSEILLERE // point d'entrée unique : création des tickets
+  CRM_MANAGER // qualification
+  CONSEILLER_SAV // traitement
+  CHEF_ATELIER // dispatch atelier
+  RESPONSABLE_SAV // supervision / escalade
+  DIRECTION // pilotage / KPI
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ComplaintStatus {
+  NEW // créée par la téléconseillère
+  QUALIFIED // qualifiée par le CRM manager
+  ASSIGNED // affectée à un conseiller
+  IN_PROGRESS // en cours de traitement
+  PENDING_PARTS // en attente de pièces
+  ESCALATED // escaladée
+  RESOLVED // résolue techniquement
+  CLOSED // clôturée (après NPS)
+  CANCELLED // annulée / fusionnée
+}
+
+enum OrStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+}
+
+enum EmailStatus {
+  SENT
+  FAILED
+}
+
+enum NoteVisibility {
+  ALL
+  INTERNAL
+  MANAGEMENT
+}
+
+enum CorrectiveActionStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+enum NpsCategory {
+  DETRACTOR // 0-6
+  PASSIVE // 7-8
+  PROMOTER // 9-10
+}
+
+enum EscalationReason {
+  SLA_BREACH // délai SLA dépassé
+  PRIORITY // priorité élevée
+  HIERARCHICAL // remontée hiérarchique manuelle
+}
+
+// -----------------------------------------------------------------------------
+//  SITES (réseau multi-concessions)
+// -----------------------------------------------------------------------------
+
+model Site {
+  id        String   @id @default(uuid())
+  code      String   @unique // ex: DLA, YDE, BAF...
+  name      String
+  city      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  users      User[]
+  complaints Complaint[]
+  ors        RepairOrder[]
+
+  @@map("sites")
+}
+
+// -----------------------------------------------------------------------------
+//  UTILISATEURS (RBAC + rattachement site + hiérarchie d'escalade)
+// -----------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  fullName     String   @map("full_name")
+  role         Role
+  phone        String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Rattachement multi-site
+  siteId String? @map("site_id")
+  site   Site?   @relation(fields: [siteId], references: [id])
+
+  // Hiérarchie (escalade)
+  managerId String? @map("manager_id")
+  manager   User?   @relation("UserHierarchy", fields: [managerId], references: [id])
+  reports   User[]  @relation("UserHierarchy")
+
+  // Relations métier
+  createdComplaints  Complaint[]        @relation("ComplaintCreatedBy")
+  assignedComplaints Complaint[]        @relation("ComplaintAssignedTo")
+  statusChanges      StatusHistory[]
+  notes              InternalNote[]
+  attachments        Attachment[]
+  auditLogs          AuditLog[]
+  escalations        Escalation[]       @relation("EscalationToUser")
+
+  @@index([siteId])
+  @@index([managerId])
+  @@index([role])
+  @@map("users")
+}
+
+// -----------------------------------------------------------------------------
+//  TAXONOMIE NORMALISÉE : Catégories & Causes racines
+// -----------------------------------------------------------------------------
+
+model Category {
+  id      String  @id @default(uuid())
+  code    String  @unique // ex: DELAY, QUALITY_REPAIR...
+  labelFr String  @map("label_fr")
+  labelEn String  @map("label_en")
+  active  Boolean @default(true)
+  sortOrder Int   @default(0) @map("sort_order")
+
+  complaints Complaint[]
+
+  @@map("categories")
+}
+
+model RootCause {
+  id      String  @id @default(uuid())
+  code    String  @unique // ex: DELAY_NOT_MET...
+  labelFr String  @map("label_fr")
+  active  Boolean @default(true)
+  sortOrder Int   @default(0) @map("sort_order")
+
+  complaints ComplaintRootCause[]
+
+  @@map("root_causes")
+}
+
+// Table de liaison (multi-select des causes racines par réclamation)
+model ComplaintRootCause {
+  complaintId String @map("complaint_id")
+  rootCauseId String @map("root_cause_id")
+
+  complaint Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  rootCause RootCause @relation(fields: [rootCauseId], references: [id], onDelete: Cascade)
+
+  @@id([complaintId, rootCauseId])
+  @@map("complaint_root_causes")
+}
+
+// -----------------------------------------------------------------------------
+//  ORDRE DE RÉPARATION (OR) — optionnel mais structurant
+// -----------------------------------------------------------------------------
+
+model RepairOrder {
+  id           String    @id @default(uuid())
+  orNumber     String    @unique @map("or_number")
+  workshop     String?
+  status       OrStatus  @default(OPEN)
+  vehicleVin   String?   @map("vehicle_vin")
+  vehiclePlate String?   @map("vehicle_plate")
+  openedAt     DateTime  @default(now()) @map("opened_at")
+  closedAt     DateTime? @map("closed_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  siteId String? @map("site_id")
+  site   Site?   @relation(fields: [siteId], references: [id])
+
+  complaints Complaint[]
+
+  @@index([siteId])
+  @@map("repair_orders")
+}
+
+// -----------------------------------------------------------------------------
+//  COMPLAINT (RÉCLAMATION) — ENTITÉ CENTRALE
+// -----------------------------------------------------------------------------
+
+model Complaint {
+  id        String   @id @default(uuid())
+  reference String   @unique // ex: CFAO-SAV-DLA-20260622-001
+
+  // Client
+  clientName  String  @map("client_name")
+  clientPhone String  @map("client_phone")
+  clientEmail String? @map("client_email")
+
+  // Véhicule
+  vehicleVin   String? @map("vehicle_vin")
+  vehiclePlate String? @map("vehicle_plate")
+  vehicleModel String? @map("vehicle_model")
+  vehicleYear  Int?    @map("vehicle_year")
+  mileage      Int?
+
+  // Contenu
+  description String
+  priority    Priority        @default(MEDIUM)
+  status      ComplaintStatus @default(NEW)
+
+  // Classification normalisée
+  categoryId String?   @map("category_id")
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  // Rattachements
+  siteId String @map("site_id")
+  site   Site   @relation(fields: [siteId], references: [id])
+
+  orId String?      @map("or_id")
+  or   RepairOrder? @relation(fields: [orId], references: [id])
+
+  // Acteurs
+  createdById  String  @map("created_by") // toujours une téléconseillère
+  createdBy    User    @relation("ComplaintCreatedBy", fields: [createdById], references: [id])
+  assignedToId String? @map("assigned_to")
+  assignedTo   User?   @relation("ComplaintAssignedTo", fields: [assignedToId], references: [id])
+
+  // Escalade / SLA
+  slaDueAt        DateTime? @map("sla_due_at")
+  escalationLevel Int       @default(0) @map("escalation_level")
+  escalatedAt     DateTime? @map("escalated_at")
+
+  // Fusion de doublons
+  mergedIntoId String?     @map("merged_into_id")
+  mergedInto   Complaint?  @relation("ComplaintMerge", fields: [mergedIntoId], references: [id])
+  mergedFrom   Complaint[] @relation("ComplaintMerge")
+
+  // Dates de cycle de vie
+  qualifiedAt DateTime? @map("qualified_at")
+  resolvedAt  DateTime? @map("resolved_at")
+  closedAt    DateTime? @map("closed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  rootCauses        ComplaintRootCause[]
+  statusHistory     StatusHistory[]
+  notes             InternalNote[]
+  attachments       Attachment[]
+  correctiveActions CorrectiveAction[]
+  escalations       Escalation[]
+  nps               NpsSurvey?
+  emailLogs         EmailLog[]
+  auditLogs         AuditLog[]
+
+  @@index([siteId])
+  @@index([status])
+  @@index([priority])
+  @@index([assignedToId])
+  @@index([createdById])
+  @@index([categoryId])
+  @@index([createdAt])
+  @@map("complaints")
+}
+
+// -----------------------------------------------------------------------------
+//  WORKFLOW : Historique de statut (traçabilité)
+// -----------------------------------------------------------------------------
+
+model StatusHistory {
+  id          String           @id @default(uuid())
+  complaintId String           @map("complaint_id")
+  complaint   Complaint        @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  fromStatus  ComplaintStatus? @map("from_status")
+  toStatus    ComplaintStatus  @map("to_status")
+  changedById String?          @map("changed_by")
+  changedBy   User?            @relation(fields: [changedById], references: [id])
+  comment     String?
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  @@index([complaintId])
+  @@map("status_history")
+}
+
+// -----------------------------------------------------------------------------
+//  ESCALADE
+// -----------------------------------------------------------------------------
+
+model Escalation {
+  id          String           @id @default(uuid())
+  complaintId String           @map("complaint_id")
+  complaint   Complaint        @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  reason      EscalationReason
+  level       Int // niveau atteint après escalade
+  toUserId    String?          @map("to_user_id")
+  toUser      User?            @relation("EscalationToUser", fields: [toUserId], references: [id])
+  note        String?
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  @@index([complaintId])
+  @@map("escalations")
+}
+
+// -----------------------------------------------------------------------------
+//  NPS (Net Promoter Score) — déclenché à la clôture
+// -----------------------------------------------------------------------------
+
+model NpsSurvey {
+  id          String       @id @default(uuid())
+  complaintId String       @unique @map("complaint_id")
+  complaint   Complaint    @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  score       Int? // 0-10
+  category    NpsCategory?
+  comment     String?
+  sentAt      DateTime     @default(now()) @map("sent_at")
+  respondedAt DateTime?    @map("responded_at")
+
+  @@map("nps_surveys")
+}
+
+// -----------------------------------------------------------------------------
+//  NOTES INTERNES / PIÈCES JOINTES / ACTIONS CORRECTIVES
+// -----------------------------------------------------------------------------
+
+model InternalNote {
+  id          String         @id @default(uuid())
+  complaintId String         @map("complaint_id")
+  complaint   Complaint      @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  authorId    String         @map("author_id")
+  author      User           @relation(fields: [authorId], references: [id])
+  note        String
+  visibility  NoteVisibility @default(ALL)
+  createdAt   DateTime       @default(now()) @map("created_at")
+
+  @@index([complaintId])
+  @@map("internal_notes")
+}
+
+model Attachment {
+  id          String    @id @default(uuid())
+  complaintId String    @map("complaint_id")
+  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  fileName    String    @map("file_name")
+  storagePath String    @map("storage_path") // chemin Supabase Storage
+  mimeType    String?   @map("mime_type")
+  size        Int?
+  uploadedById String   @map("uploaded_by")
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([complaintId])
+  @@map("attachments")
+}
+
+model CorrectiveAction {
+  id          String                 @id @default(uuid())
+  complaintId String                 @map("complaint_id")
+  complaint   Complaint              @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  description String
+  responsible String
+  dueDate     DateTime?              @map("due_date")
+  status      CorrectiveActionStatus @default(PENDING)
+  createdAt   DateTime               @default(now()) @map("created_at")
+  updatedAt   DateTime               @updatedAt @map("updated_at")
+
+  @@index([complaintId])
+  @@map("corrective_actions")
+}
+
+// -----------------------------------------------------------------------------
+//  NOTIFICATIONS : Journal des emails (succès / échec)
+// -----------------------------------------------------------------------------
+
+model EmailLog {
+  id          String      @id @default(uuid())
+  complaintId String?     @map("complaint_id")
+  complaint   Complaint?  @relation(fields: [complaintId], references: [id], onDelete: SetNull)
+  template    String // ex: COMPLAINT_CREATED, STATUS_CHANGED...
+  toAddress   String      @map("to_address")
+  subject     String
+  status      EmailStatus
+  error       String?
+  providerMessageId String? @map("provider_message_id")
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  @@index([complaintId])
+  @@index([status])
+  @@map("email_logs")
+}
+
+// -----------------------------------------------------------------------------
+//  AUDIT LOG (immuable) — sécurité / conformité
+// -----------------------------------------------------------------------------
+
+model AuditLog {
+  id          String     @id @default(uuid())
+  complaintId String?    @map("complaint_id")
+  complaint   Complaint? @relation(fields: [complaintId], references: [id], onDelete: SetNull)
+  userId      String?    @map("user_id")
+  user        User?      @relation(fields: [userId], references: [id])
+  action      String // ex: COMPLAINT_CREATED, STATUS_CHANGED, ASSIGNED...
+  entity      String // ex: Complaint, RepairOrder, User
+  entityId    String?    @map("entity_id")
+  details     Json?
+  ip          String?
+  createdAt   DateTime   @default(now()) @map("created_at")
+
+  @@index([complaintId])
+  @@index([userId])
+  @@index([action])
+  @@map("audit_logs")
+}

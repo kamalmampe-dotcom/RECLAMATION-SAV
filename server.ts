@@ -1,78 +1,53 @@
 import 'dotenv/config';
 import express from 'express';
-import session from 'express-session';
-import path from 'path';
 import cors from 'cors';
+import path from 'path';
 import { fileURLToPath } from 'url';
-import fs from 'fs';
 
-// Helper to get __dirname
-let currentDir: string;
-if (typeof __dirname !== 'undefined') {
-  currentDir = __dirname;
-} else {
-  // @ts-ignore
-  currentDir = path.dirname(fileURLToPath(import.meta.url));
-}
-
-// @ts-ignore
+import { env } from './src/lib/env.js';
+import { logger } from './src/lib/logger.js';
+import { buildSessionMiddleware } from './src/lib/session.js';
+import { errorHandler, notFoundHandler } from './src/middleware/errorHandler.js';
+import { startEscalationJob } from './src/jobs/escalationJob.js';
 
 import authRoutes from './src/routes/auth.js';
-// @ts-ignore
-import reclamationRoutes from './src/routes/reclamations.js';
+import userRoutes from './src/routes/users.js';
+import complaintRoutes from './src/routes/complaints.js';
+import referenceRoutes from './src/routes/reference.js';
 
-async function startServer() {
+const currentDir =
+  typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+
+function startServer() {
   const app = express();
-  const PORT = process.env.PORT || 3000;
 
-  // Make sure upload dir exists
-  const uploadDir = path.join(currentDir, 'public/uploads');
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-  }
-
-  app.use(cors());
+  app.set('trust proxy', 1);
+  app.use(cors({ origin: env.APP_URL, credentials: true }));
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
-  
-  app.set('trust proxy', 1);
+  app.use(buildSessionMiddleware());
 
-  app.use(session({
-    secret: process.env.SESSION_SECRET || 'supersecretcobail2024',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { 
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
-  }));
-
-  // API Routes
+  // --- API ---
+  app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }));
   app.use('/api/auth', authRoutes);
-  app.use('/api/reclamations', reclamationRoutes);
+  app.use('/api/users', userRoutes);
+  app.use('/api/complaints', complaintRoutes);
+  app.use('/api/reference', referenceRoutes);
 
-  // Serve static UI from src/public
+  // 404 JSON pour les routes /api inconnues
+  app.use('/api', notFoundHandler);
+
+  // --- Front statique hérité (remplacé par le SPA React en Phase 5) ---
   const publicPath = path.join(currentDir, 'src/public');
   app.use(express.static(publicPath));
-  
-  // Also static for public uploads
-  app.use('/public/uploads', express.static(uploadDir));
-  app.use('/uploads', express.static(uploadDir));
+  app.get('/', (_req, res) => res.sendFile(path.join(publicPath, 'views/login.html')));
 
-  app.get('/', (req, res) => {
-    res.sendFile(path.join(publicPath, 'views/login.html'));
-  });
+  // --- Gestion centralisée des erreurs (toujours en dernier) ---
+  app.use(errorHandler);
 
-  app.get('/:page', (req, res, next) => {
-    const page = req.params.page;
-    if (page.startsWith('dashboard') || page === 'login') {
-      res.sendFile(path.join(publicPath, `views/${page}.html`));
-    } else {
-      next();
-    }
-  });
-
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+  app.listen(env.PORT, () => {
+    logger.info(`Serveur démarré sur http://localhost:${env.PORT} (${env.NODE_ENV})`);
+    startEscalationJob();
   });
 }
 
