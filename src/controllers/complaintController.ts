@@ -6,9 +6,14 @@ import { complaintService } from '../services/complaintService.js';
 import { escalationService } from '../services/escalationService.js';
 import { aiService } from '../services/aiService.js';
 import {
+  addNoteSchema,
   assignComplaintSchema,
+  correctiveActionSchema,
+  correctiveActionStatusSchema,
   createComplaintSchema,
+  linkRepairOrderSchema,
   listComplaintsQuerySchema,
+  mergeComplaintSchema,
   qualifyComplaintSchema,
   updateStatusSchema,
 } from '../validation/schemas.js';
@@ -79,4 +84,49 @@ export const aiSuggest = asyncHandler(async (req: Request, res: Response) => {
   const complaint = await complaintService.getById(req.params.id, actor);
   const suggestion = await aiService.suggest(complaint.description);
   res.json({ suggestion });
+});
+
+// --- Notes internes ---------------------------------------------------------
+export const addNote = asyncHandler(async (req: Request, res: Response) => {
+  const input = addNoteSchema.parse(req.body);
+  const actor = currentUser(req)!;
+  const note = await complaintService.addNote(req.params.id, input, actor, req.ip);
+  res.status(201).json({ note });
+});
+
+// --- Actions correctives ----------------------------------------------------
+export const addCorrectiveAction = asyncHandler(async (req: Request, res: Response) => {
+  const input = correctiveActionSchema.parse(req.body);
+  const actor = currentUser(req)!;
+  const action = await complaintService.addCorrectiveAction(req.params.id, input, actor, req.ip);
+  res.status(201).json({ action });
+});
+
+export const updateCorrectiveAction = asyncHandler(async (req: Request, res: Response) => {
+  const { status } = correctiveActionStatusSchema.parse(req.body);
+  const actor = currentUser(req)!;
+  const action = await complaintService.updateCorrectiveActionStatus(req.params.id, req.params.actionId, status, actor, req.ip);
+  res.json({ action });
+});
+
+// --- Ordre de réparation ----------------------------------------------------
+export const linkRepairOrder = asyncHandler(async (req: Request, res: Response) => {
+  const input = linkRepairOrderSchema.parse(req.body);
+  const actor = currentUser(req)!;
+  const or = await complaintService.linkRepairOrder(req.params.id, input, actor, req.ip);
+  res.status(201).json({ or });
+});
+
+// --- Doublons & fusion ------------------------------------------------------
+export const getDuplicates = asyncHandler(async (req: Request, res: Response) => {
+  const actor = currentUser(req)!;
+  const duplicates = await complaintService.findDuplicates(req.params.id, actor);
+  res.json({ duplicates });
+});
+
+export const mergeComplaint = asyncHandler(async (req: Request, res: Response) => {
+  const { intoId } = mergeComplaintSchema.parse(req.body);
+  const actor = currentUser(req)!;
+  const result = await complaintService.merge(req.params.id, intoId, actor, req.ip);
+  res.json(result);
 });

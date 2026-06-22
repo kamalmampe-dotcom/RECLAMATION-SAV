@@ -100,9 +100,34 @@ professionnel multi-site (PostgreSQL, React). Livraison par phases.
 - Templates HTML factorisés (`src/notifications/templates.ts`).
 - NPS : `NpsSurvey` créée à la clôture + email d'enquête envoyé.
 
+## Améliorations post-audit (v2)
+
+Suite à l'audit (design, traces IA, fonctionnalités, perf) :
+
+**Perf & finitions**
+- `render.yaml` : `region: frankfurt` (même zone que Supabase eu-west-1) — corrige
+  la lenteur de navigation due à la latence DB transatlantique.
+- `staleTime` relevé + données de référence stables (moins de rechargements).
+- Tirets cadratins (—) supprimés de l'UI et des emails ; IA désactivée par défaut.
+
+**Design**
+- Identité visuelle CFAO : palette de marque (`@theme` Tailwind), police Inter,
+  en-tête dégradé, boutons/champs/login aux couleurs de marque.
+
+**Dashboards par rôle**
+- `GET /api/complaints/stats` (compteurs scopés RBAC) + filtre `mine`.
+- File d'attente contextuelle selon le rôle (fin du « Total échantillon »).
+
+**Fonctionnalités ajoutées**
+- **Ordre de réparation** : `POST /api/complaints/:id/repair-order` + affichage.
+- **Notes internes** : `POST /api/complaints/:id/notes` + fil de notes.
+- **Actions correctives** : `POST .../corrective-actions` + suivi de statut.
+- **Fusion de doublons** : détection (`GET .../duplicates`) + fusion
+  (`POST .../merge`, dossier source annulé et lié au survivant).
+
 ## Ce qu'il reste à fournir (côté client)
 
-1. `DATABASE_URL` Supabase → pour lancer `npm run db:migrate` réellement.
+1. `DATABASE_URL` Supabase → pour lancer les migrations.
 2. Identifiants SMTP Brevo (`EMAIL_USER`, `EMAIL_PASS`) + email expéditeur validé.
 3. Emails réels des responsables par site (escalade).
 4. Validation/ajustement des délais SLA par priorité.

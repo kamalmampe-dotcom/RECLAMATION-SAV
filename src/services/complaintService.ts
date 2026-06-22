@@ -15,7 +15,13 @@ import { slaHoursByPriority } from '../lib/env.js';
 import { ALLOWED_TRANSITIONS } from '../lib/complaintWorkflow.js';
 import { can, complaintVisibilityWhere, type SessionUser } from '../lib/rbac.js';
 import { badRequest, forbidden, notFound } from '../lib/errors.js';
-import type { CreateComplaintInput, QualifyComplaintInput } from '../validation/schemas.js';
+import type {
+  AddNoteInput,
+  CorrectiveActionInput,
+  CreateComplaintInput,
+  LinkRepairOrderInput,
+  QualifyComplaintInput,
+} from '../validation/schemas.js';
 
 function slaDueDate(priority: Priority, from = new Date()): Date {
   const hours = slaHoursByPriority[priority];
@@ -287,5 +293,127 @@ export const complaintService = {
       await auditService.record({ action: 'NPS_TRIGGERED', entity: 'Complaint', entityId: id, complaintId: id, userId: actor.userId, ip });
     }
     return updated;
+  },
+
+  // --- Notes internes -------------------------------------------------------
+  async addNote(
+    id: string,
+    input: AddNoteInput,
+    actor: SessionUser,
+    ip?: string | null,
+  ) {
+    await this.getById(id, actor);
+    const note = await prisma.internalNote.create({
+      data: { complaintId: id, authorId: actor.userId, note: input.note, visibility: input.visibility },
+      include: { author: { select: { fullName: true, role: true } } },
+    });
+    await auditService.record({ action: 'NOTE_ADDED', entity: 'Complaint', entityId: id, complaintId: id, userId: actor.userId, ip });
+    return note;
+  },
+
+  // --- Actions correctives --------------------------------------------------
+  async addCorrectiveAction(
+    id: string,
+    input: CorrectiveActionInput,
+    actor: SessionUser,
+    ip?: string | null,
+  ) {
+    await this.getById(id, actor);
+    const action = await prisma.correctiveAction.create({
+      data: {
+        complaintId: id,
+        description: input.description,
+        responsible: input.responsible,
+        dueDate: input.dueDate ? new Date(input.dueDate) : null,
+      },
+    });
+    await auditService.record({ action: 'CORRECTIVE_ACTION_ADDED', entity: 'Complaint', entityId: id, complaintId: id, userId: actor.userId, ip });
+    return action;
+  },
+
+  async updateCorrectiveActionStatus(
+    id: string,
+    actionId: string,
+    status: 'PENDING' | 'IN_PROGRESS' | 'DONE' | 'CANCELLED',
+    actor: SessionUser,
+    ip?: string | null,
+  ) {
+    await this.getById(id, actor);
+    const existing = await prisma.correctiveAction.findUnique({ where: { id: actionId } });
+    if (!existing || existing.complaintId !== id) throw notFound('Action corrective introuvable');
+    const action = await prisma.correctiveAction.update({ where: { id: actionId }, data: { status } });
+    await auditService.record({ action: 'CORRECTIVE_ACTION_UPDATED', entity: 'Complaint', entityId: id, complaintId: id, userId: actor.userId, ip, details: { status } });
+    return action;
+  },
+
+  // --- Ordre de réparation (OR) ---------------------------------------------
+  async linkRepairOrder(
+    id: string,
+    input: LinkRepairOrderInput,
+    actor: SessionUser,
+    ip?: string | null,
+  ) {
+    const complaint = await this.getById(id, actor);
+    const or = await prisma.repairOrder.upsert({
+      where: { orNumber: input.orNumber },
+      update: { workshop: input.workshop ?? undefined },
+      create: {
+        orNumber: input.orNumber,
+        workshop: input.workshop ?? null,
+        siteId: complaint.siteId,
+        vehicleVin: complaint.vehicleVin,
+        vehiclePlate: complaint.vehiclePlate,
+      },
+    });
+    await prisma.complaint.update({ where: { id }, data: { orId: or.id } });
+    await auditService.record({ action: 'OR_LINKED', entity: 'Complaint', entityId: id, complaintId: id, userId: actor.userId, ip, details: { orNumber: or.orNumber } });
+    return or;
+  },
+
+  // --- Détection de doublons & fusion ---------------------------------------
+  async findDuplicates(id: string, actor: SessionUser) {
+    const c = await this.getById(id, actor);
+    const ors: Prisma.ComplaintWhereInput[] = [];
+    if (c.vehiclePlate) ors.push({ vehiclePlate: c.vehiclePlate });
+    if (c.vehicleVin) ors.push({ vehicleVin: c.vehicleVin });
+    if (c.clientPhone) ors.push({ clientPhone: c.clientPhone });
+    if (ors.length === 0) return [];
+    return prisma.complaint.findMany({
+      where: {
+        id: { not: id },
+        mergedIntoId: null,
+        status: { notIn: ['CLOSED', 'CANCELLED'] },
+        ...complaintVisibilityWhere(actor),
+        OR: ors,
+      },
+      select: {
+        id: true, reference: true, clientName: true, vehiclePlate: true,
+        status: true, priority: true, createdAt: true,
+        site: { select: { city: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    });
+  },
+
+  async merge(id: string, intoId: string, actor: SessionUser, ip?: string | null) {
+    if (id === intoId) throw badRequest('Une réclamation ne peut pas être fusionnée avec elle-même');
+    const source = await this.getById(id, actor);
+    const target = await this.getById(intoId, actor);
+    if (source.status === 'CLOSED' || source.status === 'CANCELLED') {
+      throw badRequest('Cette réclamation est déjà clôturée ou annulée');
+    }
+    await prisma.complaint.update({
+      where: { id },
+      data: {
+        mergedIntoId: intoId,
+        status: 'CANCELLED',
+        statusHistory: {
+          create: { fromStatus: source.status, toStatus: 'CANCELLED', changedById: actor.userId, comment: `Fusionnée dans ${target.reference}` },
+        },
+      },
+    });
+    await auditService.record({ action: 'COMPLAINT_MERGED', entity: 'Complaint', entityId: id, complaintId: id, userId: actor.userId, ip, details: { intoId, intoReference: target.reference } });
+    return { merged: true, intoReference: target.reference };
   },
 };

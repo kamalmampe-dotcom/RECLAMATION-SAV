@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from '../lib/api.ts';
 import { Button, Card, Field, PriorityBadge, StatusBadge, inputClass } from '../components/ui.tsx';
 import { PRIORITY_LABELS, ROLE_LABELS, STATUS_LABELS, formatDate } from '../lib/labels.ts';
 import { useAuth } from '../auth/AuthContext.tsx';
 import { ALLOWED_TRANSITIONS } from '@/src/lib/complaintWorkflow.ts';
-import type { Category, ComplaintDetail, ComplaintStatus, Priority, RootCause } from '../lib/types.ts';
+import type { Category, ComplaintDetail, ComplaintStatus, CorrectiveAction, InternalNoteRow, Priority, RepairOrderRow, RootCause } from '../lib/types.ts';
 
 export default function ComplaintDetailPage() {
   const { id = '' } = useParams();
@@ -38,7 +38,9 @@ export default function ComplaintDetailPage() {
   const canAssign = (role === 'CHEF_ATELIER' || role === 'RESPONSABLE_SAV' || role === 'ADMIN') &&
     ['QUALIFIED', 'ASSIGNED', 'IN_PROGRESS', 'PENDING_PARTS', 'ESCALATED'].includes(c.status);
   const canTreat = role === 'CONSEILLER_SAV' || role === 'CHEF_ATELIER' || role === 'RESPONSABLE_SAV' || role === 'ADMIN';
+  const canMerge = (role === 'CRM_MANAGER' || role === 'ADMIN') && c.status !== 'CLOSED' && c.status !== 'CANCELLED';
   const nextStatuses = ALLOWED_TRANSITIONS[c.status];
+  const done = () => { setActionError(null); invalidate(); };
 
   return (
     <div className="space-y-5">
@@ -54,6 +56,12 @@ export default function ComplaintDetailPage() {
       </div>
 
       {actionError && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{actionError}</div>}
+
+      {c.mergedIntoId && (
+        <div className="rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-600">Cette réclamation a été fusionnée dans un autre dossier.</div>
+      )}
+
+      {canMerge && <DuplicatesPanel id={id} onDone={done} onError={onError} />}
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         {/* Colonne infos */}
@@ -82,6 +90,12 @@ export default function ComplaintDetailPage() {
               </div>
             )}
           </Card>
+
+          <RepairOrderPanel id={id} or={c.or} canEdit={canTreat} onDone={done} onError={onError} />
+
+          <CorrectiveActionsPanel id={id} actions={c.correctiveActions} canEdit={canTreat} onDone={done} onError={onError} />
+
+          <NotesPanel id={id} notes={c.notes} onDone={done} onError={onError} />
 
           <AttachmentsPanel id={id} canUpload={canTreat} />
 
@@ -320,6 +334,193 @@ function AssignPanel({ id, onDone, onError }: { id: string; onDone: () => void; 
           {mut.isPending ? 'Affectation…' : 'Affecter'}
         </Button>
       </div>
+    </Card>
+  );
+}
+
+const OR_STATUS_LABELS: Record<string, string> = { OPEN: 'Ouvert', IN_PROGRESS: 'En cours', CLOSED: 'Clôturé' };
+const CA_STATUS_LABELS: Record<string, string> = { PENDING: 'À faire', IN_PROGRESS: 'En cours', DONE: 'Terminée', CANCELLED: 'Annulée' };
+const CA_NEXT: Record<string, string[]> = { PENDING: ['IN_PROGRESS', 'CANCELLED'], IN_PROGRESS: ['DONE', 'CANCELLED'], DONE: [], CANCELLED: [] };
+
+function RepairOrderPanel({ id, or, canEdit, onDone, onError }: { id: string; or: RepairOrderRow | null; canEdit: boolean; onDone: () => void; onError: (e: unknown) => void }) {
+  const [orNumber, setOrNumber] = useState('');
+  const [workshop, setWorkshop] = useState('');
+  const mut = useMutation({
+    mutationFn: () => api.post(`/api/complaints/${id}/repair-order`, { orNumber, workshop: workshop || null }),
+    onSuccess: () => { setOrNumber(''); setWorkshop(''); onDone(); },
+    onError,
+  });
+
+  return (
+    <Card className="p-5">
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Ordre de réparation</h2>
+      {or ? (
+        <div className="flex flex-wrap items-center gap-3 text-sm">
+          <span className="rounded bg-slate-100 px-2 py-1 font-mono font-medium">{or.orNumber}</span>
+          {or.workshop && <span className="text-slate-600">{or.workshop}</span>}
+          <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs text-brand-700">{OR_STATUS_LABELS[or.status] ?? or.status}</span>
+          <span className="text-xs text-slate-400">Ouvert le {formatDate(or.openedAt)}</span>
+        </div>
+      ) : (
+        <p className="text-sm text-slate-500">Aucun OR rattaché.</p>
+      )}
+      {canEdit && (
+        <div className="mt-3 flex flex-wrap items-end gap-2">
+          <input className={`${inputClass} w-44`} placeholder="N° d'OR" value={orNumber} onChange={(e) => setOrNumber(e.target.value)} />
+          <input className={`${inputClass} w-44`} placeholder="Atelier (optionnel)" value={workshop} onChange={(e) => setWorkshop(e.target.value)} />
+          <Button variant="secondary" disabled={orNumber.trim().length < 2 || mut.isPending} onClick={() => mut.mutate()}>
+            {or ? "Mettre à jour l'OR" : "Rattacher l'OR"}
+          </Button>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function CorrectiveActionsPanel({ id, actions, canEdit, onDone, onError }: { id: string; actions: CorrectiveAction[]; canEdit: boolean; onDone: () => void; onError: (e: unknown) => void }) {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ description: '', responsible: '', dueDate: '' });
+  const addMut = useMutation({
+    mutationFn: () => api.post(`/api/complaints/${id}/corrective-actions`, {
+      description: form.description,
+      responsible: form.responsible,
+      dueDate: form.dueDate ? new Date(form.dueDate).toISOString() : null,
+    }),
+    onSuccess: () => { setForm({ description: '', responsible: '', dueDate: '' }); setOpen(false); onDone(); },
+    onError,
+  });
+  const statusMut = useMutation({
+    mutationFn: (v: { actionId: string; status: string }) => api.patch(`/api/complaints/${id}/corrective-actions/${v.actionId}`, { status: v.status }),
+    onSuccess: onDone,
+    onError,
+  });
+
+  return (
+    <Card className="p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Actions correctives</h2>
+        {canEdit && <button onClick={() => setOpen((o) => !o)} className="text-sm font-medium text-brand-600 hover:underline">{open ? 'Fermer' : '+ Ajouter'}</button>}
+      </div>
+      {open && (
+        <div className="mb-4 space-y-2 rounded-lg border border-slate-200 p-3">
+          <input className={inputClass} placeholder="Description de l'action" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+          <div className="flex gap-2">
+            <input className={inputClass} placeholder="Responsable" value={form.responsible} onChange={(e) => setForm((f) => ({ ...f, responsible: e.target.value }))} />
+            <input type="date" className={inputClass} value={form.dueDate} onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))} />
+          </div>
+          <Button disabled={form.description.trim().length < 3 || form.responsible.trim().length < 2 || addMut.isPending} onClick={() => addMut.mutate()}>
+            {addMut.isPending ? 'Ajout…' : 'Enregistrer'}
+          </Button>
+        </div>
+      )}
+      {actions.length === 0 ? (
+        <p className="text-sm text-slate-500">Aucune action corrective.</p>
+      ) : (
+        <ul className="space-y-2">
+          {actions.map((a) => (
+            <li key={a.id} className="rounded-lg border border-slate-100 p-3 text-sm">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <div className="font-medium">{a.description}</div>
+                  <div className="text-xs text-slate-500">{a.responsible}{a.dueDate ? ` · échéance ${formatDate(a.dueDate)}` : ''}</div>
+                </div>
+                <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">{CA_STATUS_LABELS[a.status]}</span>
+              </div>
+              {canEdit && CA_NEXT[a.status]?.length > 0 && (
+                <div className="mt-2 flex gap-2">
+                  {CA_NEXT[a.status].map((s) => (
+                    <button key={s} disabled={statusMut.isPending} onClick={() => statusMut.mutate({ actionId: a.id, status: s })} className="rounded border border-slate-300 px-2 py-0.5 text-xs text-slate-600 hover:bg-slate-50">
+                      {CA_STATUS_LABELS[s]}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+}
+
+function NotesPanel({ id, notes, onDone, onError }: { id: string; notes: InternalNoteRow[]; onDone: () => void; onError: (e: unknown) => void }) {
+  const [text, setText] = useState('');
+  const mut = useMutation({
+    mutationFn: () => api.post(`/api/complaints/${id}/notes`, { note: text }),
+    onSuccess: () => { setText(''); onDone(); },
+    onError,
+  });
+
+  return (
+    <Card className="p-5">
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Notes internes</h2>
+      <div className="mb-3 flex gap-2">
+        <input className={inputClass} placeholder="Ajouter une note interne…" value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && text.trim()) mut.mutate(); }} />
+        <Button variant="secondary" disabled={!text.trim() || mut.isPending} onClick={() => mut.mutate()}>Publier</Button>
+      </div>
+      {notes.length === 0 ? (
+        <p className="text-sm text-slate-500">Aucune note.</p>
+      ) : (
+        <ul className="space-y-2">
+          {notes.map((n) => (
+            <li key={n.id} className="rounded-lg bg-slate-50 p-3 text-sm">
+              <p>{n.note}</p>
+              <div className="mt-1 text-xs text-slate-400">{n.author?.fullName ?? 'Système'} · {formatDate(n.createdAt)}</div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+}
+
+interface DuplicateRow {
+  id: string;
+  reference: string;
+  clientName: string;
+  vehiclePlate: string | null;
+  status: ComplaintStatus;
+  priority: Priority;
+  createdAt: string;
+  site: { city: string } | null;
+}
+
+function DuplicatesPanel({ id, onDone, onError }: { id: string; onDone: () => void; onError: (e: unknown) => void }) {
+  const navigate = useNavigate();
+  const { data } = useQuery({ queryKey: ['duplicates', id], queryFn: () => api.get<{ duplicates: DuplicateRow[] }>(`/api/complaints/${id}/duplicates`) });
+  const mergeMut = useMutation({
+    mutationFn: (intoId: string) => api.post<{ intoReference: string }>(`/api/complaints/${id}/merge`, { intoId }),
+    onSuccess: (_r, intoId) => { onDone(); navigate(`/complaints/${intoId}`); },
+    onError,
+  });
+
+  const dups = data?.duplicates ?? [];
+  if (dups.length === 0) return null;
+
+  return (
+    <Card className="border-amber-200 bg-amber-50 p-4">
+      <div className="flex items-center gap-2 text-sm font-semibold text-amber-800">
+        Doublons potentiels détectés ({dups.length})
+      </div>
+      <p className="mt-1 text-xs text-amber-700">Même véhicule ou même contact qu'une autre réclamation ouverte.</p>
+      <ul className="mt-3 space-y-2">
+        {dups.map((d) => (
+          <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white px-3 py-2 text-sm">
+            <div className="flex items-center gap-2">
+              <Link to={`/complaints/${d.id}`} className="font-medium text-brand-600 hover:underline">{d.reference}</Link>
+              <span className="text-slate-600">{d.clientName}{d.vehiclePlate ? ` · ${d.vehiclePlate}` : ''}</span>
+              <StatusBadge status={d.status} />
+            </div>
+            <button
+              disabled={mergeMut.isPending}
+              onClick={() => { if (confirm(`Fusionner ce dossier dans ${d.reference} ? La réclamation courante sera annulée.`)) mergeMut.mutate(d.id); }}
+              className="rounded-md border border-amber-300 bg-white px-2.5 py-1 text-xs font-medium text-amber-800 hover:bg-amber-100 disabled:opacity-50"
+            >
+              Fusionner dans ce dossier
+            </button>
+          </li>
+        ))}
+      </ul>
     </Card>
   );
 }

@@ -118,6 +118,7 @@ export interface ComplaintDetail extends ComplaintListItem {
   correctiveActions: CorrectiveAction[];
   notes: InternalNoteRow[];
   or: RepairOrderRow | null;
+  mergedIntoId: string | null;
   nps: { score: number | null; category: string | null } | null;
 }
 

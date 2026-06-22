@@ -101,6 +101,34 @@ export const listComplaintsQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(200).default(50),
 });
 
+// --- Notes internes ---------------------------------------------------------
+export const addNoteSchema = z.object({
+  note: z.string().trim().min(1, 'Note vide').max(2000),
+  visibility: z.enum(['ALL', 'INTERNAL', 'MANAGEMENT']).default('ALL'),
+});
+
+// --- Actions correctives ----------------------------------------------------
+export const correctiveActionSchema = z.object({
+  description: z.string().trim().min(3, 'Description requise').max(1000),
+  responsible: z.string().trim().min(2, 'Responsable requis').max(120),
+  dueDate: z.string().datetime().optional().nullable(),
+});
+
+export const correctiveActionStatusSchema = z.object({
+  status: z.enum(['PENDING', 'IN_PROGRESS', 'DONE', 'CANCELLED']),
+});
+
+// --- Ordre de réparation (OR) -----------------------------------------------
+export const linkRepairOrderSchema = z.object({
+  orNumber: z.string().trim().min(2, "Numéro d'OR requis").max(60),
+  workshop: z.string().trim().max(120).optional().nullable(),
+});
+
+// --- Fusion de doublons -----------------------------------------------------
+export const mergeComplaintSchema = z.object({
+  intoId: z.string().uuid(),
+});
+
 // --- NPS (enquête publique) -------------------------------------------------
 export const npsSubmitSchema = z.object({
   score: z.coerce.number().int().min(0).max(10),
@@ -112,3 +140,6 @@ export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type CreateComplaintInput = z.infer<typeof createComplaintSchema>;
 export type QualifyComplaintInput = z.infer<typeof qualifyComplaintSchema>;
+export type AddNoteInput = z.infer<typeof addNoteSchema>;
+export type CorrectiveActionInput = z.infer<typeof correctiveActionSchema>;
+export type LinkRepairOrderInput = z.infer<typeof linkRepairOrderSchema>;
