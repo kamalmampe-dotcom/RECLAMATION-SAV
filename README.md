@@ -44,15 +44,21 @@ cp .env.example .env
 npm run db:migrate      # crée les tables (migrations Prisma)
 npm run db:seed         # 6 sites + taxonomie + comptes par défaut
 
-# 4. Lancer
-npm run dev             # http://localhost:3000
+# 4. Lancer (API + frontend React en dev)
+npm run dev:all         # Express (API :3000) + Vite (UI :5173, proxy /api)
+#   ou séparément : `npm run dev` (API) et `npm run dev:web` (UI)
 ```
+
+En production, `npm run build` compile le SPA React dans `dist/`, et `npm start`
+lance le serveur Express qui sert à la fois l'API et le frontend.
 
 ### Scripts utiles
 
 | Script | Rôle |
 |---|---|
-| `npm run dev` | Serveur de développement (hot-reload) |
+| `npm run dev:all` | API + frontend React (dev) |
+| `npm run dev` | API Express seule (hot-reload) |
+| `npm run dev:web` | Frontend Vite seul |
 | `npm run db:migrate` | Crée/applique les migrations Prisma (dev) |
 | `npm run db:deploy` | Applique les migrations (production) |
 | `npm run db:seed` | Sites + catégories + causes racines + comptes |

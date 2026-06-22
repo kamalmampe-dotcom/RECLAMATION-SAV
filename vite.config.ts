@@ -17,6 +17,10 @@ export default defineConfig(() => {
       hmr: process.env.DISABLE_HMR !== 'true',
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      // En dev, le front (Vite) délègue les appels API au serveur Express (port 3000).
+      proxy: {
+        '/api': { target: 'http://localhost:3000', changeOrigin: true },
+      },
     },
   };
 });

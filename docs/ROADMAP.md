@@ -10,7 +10,7 @@ professionnel multi-site (PostgreSQL, React). Livraison par phases.
 | **2 — RBAC + Auth** | Sessions PostgreSQL, suppression de la faille `x-user-id`, RBAC par rôle + site, validation Zod, couche services/repositories Prisma, rôle ADMIN | ✅ Fait |
 | **3 — Workflow + Escalade** | Moteur d'escalade SLA/priorité/hiérarchie (node-cron) + transitions enrichies | ✅ Fait |
 | **4 — NotificationService** | Service email centralisé, templates, `email_logs` | ✅ Fait |
-| **5 — Frontend React** | 6 dashboards par rôle + saisie téléconseillère | ⏳ À venir |
+| **5 — Frontend React** | SPA React (auth, console réclamations, admin), navigation par rôle | ✅ Fait |
 | **6 — KPI Dashboard** | Volume, délai moyen, taux escalade, NPS, top causes, perf/site | ⏳ À venir |
 | **7 — IA (optionnel)** | Suggestion catégorie/causes, résumé client | ⏳ À venir |
 | **8 — Doc + déploiement** | Doc finale, CI, déploiement Render + Supabase | ⏳ À venir |
@@ -35,9 +35,23 @@ professionnel multi-site (PostgreSQL, React). Livraison par phases.
 `/api/health` + garde RBAC (401) ✅.
 
 **Reporté aux phases suivantes :**
-- Frontend React (dashboards par rôle) → Phase 5.
 - KPI dashboard (agrégations) → Phase 6.
 - IA (classification, suggestions, résumé) → Phase 7.
+
+## État Phase 5 (frontend React)
+
+- SPA **React + Vite + TypeScript + Tailwind + React Query** sous `src/web/`.
+- **Auth** : contexte d'authentification, page de connexion, routes protégées,
+  navigation filtrée par rôle (sidebar).
+- **Console réclamations** : liste filtrable (statut/priorité), création
+  (téléconseillère), détail avec actions selon le rôle (qualification +
+  catégorie/priorité/causes racines, affectation d'un conseiller, transitions de
+  statut via la machine à états), historique et escalades.
+- **Tableau de bord** : synthèse rapide (KPI complets en Phase 6).
+- **Administration** (ADMIN) : liste/création/activation des utilisateurs.
+- Dev : `npm run dev:all` (Express + Vite proxy). Prod : Express sert le build
+  React (`dist/`) avec fallback SPA.
+- Vérifié : `npm run lint` ✅, `vite build` ✅, bundle serveur ✅, SPA + API servis ✅.
 
 ## État Phases 3 & 4 (escalade + notifications)
 

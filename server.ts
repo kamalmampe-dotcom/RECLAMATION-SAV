@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 import { env } from './src/lib/env.js';
@@ -37,10 +38,13 @@ function startServer() {
   // 404 JSON pour les routes /api inconnues
   app.use('/api', notFoundHandler);
 
-  // --- Front statique hérité (remplacé par le SPA React en Phase 5) ---
-  const publicPath = path.join(currentDir, 'src/public');
-  app.use(express.static(publicPath));
-  app.get('/', (_req, res) => res.sendFile(path.join(publicPath, 'views/login.html')));
+  // --- SPA React (build de production) avec fallback côté client ---
+  // En développement, l'UI est servie par Vite (npm run dev:web) qui proxifie /api.
+  const distPath = path.join(currentDir, 'dist');
+  if (fs.existsSync(path.join(distPath, 'index.html'))) {
+    app.use(express.static(distPath));
+    app.get('*', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
+  }
 
   // --- Gestion centralisée des erreurs (toujours en dernier) ---
   app.use(errorHandler);
