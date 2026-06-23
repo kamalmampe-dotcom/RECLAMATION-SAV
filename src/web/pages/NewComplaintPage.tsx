@@ -49,7 +49,7 @@ export default function NewComplaintPage() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Field label="Nom du client *"><input required className={inputClass} value={form.clientName} onChange={set('clientName')} /></Field>
             <Field label="Téléphone *"><input required className={inputClass} value={form.clientPhone} onChange={set('clientPhone')} /></Field>
-            <Field label="Email client"><input type="email" className={inputClass} value={form.clientEmail} onChange={set('clientEmail')} placeholder="abcde@cfao.com" /></Field>
+            <Field label="Email client"><input type="email" className={inputClass} value={form.clientEmail} onChange={set('clientEmail')} placeholder="votreemail@cfao.com" /></Field>
             <Field label="Site *">
               <select required className={inputClass} value={form.siteId} onChange={set('siteId')}>
                 <option value="">Sélectionner un site</option>

@@ -46,7 +46,7 @@ export default function LoginPage() {
             <li className="flex items-center gap-3"><ShieldCheck size={18} className="text-brand-200" /> Accès sécurisé par rôle et par site</li>
           </ul>
         </div>
-        <div className="relative text-xs text-brand-100/50">© {new Date().getFullYear()} CFAO Automotive · Service Après-Vente</div>
+        <div className="relative text-xs text-brand-100/50">© {new Date().getFullYear()} CFAO Mobility Cameroon · Conçu par Junior MAMPE A BITEGNI</div>
       </div>
 
       {/* Formulaire */}
@@ -60,7 +60,7 @@ export default function LoginPage() {
 
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
             <Field label="Email">
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} placeholder="abcde@cfao.com" />
+              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} placeholder="votreemail@cfao.com" />
             </Field>
             <Field label="Mot de passe">
               <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} placeholder="••••••••" />

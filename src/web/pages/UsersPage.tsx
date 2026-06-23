@@ -160,7 +160,7 @@ function UserForm({ user, users, sites, onClose, onDone }: { user: UserRow | nul
       <form onSubmit={submit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Field label="Nom complet *"><input required className={inputClass} value={form.fullName} onChange={set('fullName')} placeholder="Jean Mballa" /></Field>
         <Field label="Email *">
-          <input type="email" required disabled={isEdit} className={`${inputClass} ${isEdit ? 'bg-slate-100 text-slate-500' : ''}`} value={form.email} onChange={set('email')} placeholder="abcde@cfao.com" />
+          <input type="email" required disabled={isEdit} className={`${inputClass} ${isEdit ? 'bg-slate-100 text-slate-500' : ''}`} value={form.email} onChange={set('email')} placeholder="votreemail@cfao.com" />
         </Field>
         <Field label={isEdit ? 'Nouveau mot de passe (optionnel)' : 'Mot de passe * (min 8)'}>
           <input type="password" required={!isEdit} minLength={8} className={inputClass} value={form.password} onChange={set('password')} placeholder={isEdit ? 'Laisser vide pour ne pas changer' : '••••••••'} />
