@@ -1,11 +1,27 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ListChecks, PlusCircle, Users, BarChart3, LogOut, Menu, X, KeyRound, MapPin } from 'lucide-react';
+import { LayoutDashboard, ListChecks, PlusCircle, Users, BarChart3, LogOut, Menu, X, KeyRound, MapPin, Download } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext.tsx';
 import { ROLE_LABELS } from '../lib/labels.ts';
 import type { Role } from '../lib/types.ts';
 import { ChangePasswordModal } from './ChangePasswordModal.tsx';
 import { Logo } from './Logo.tsx';
+import { canInstall, onInstallChange, promptInstall } from '../lib/pwa.ts';
+
+function InstallButton() {
+  const [show, setShow] = useState(canInstall());
+  useEffect(() => onInstallChange(() => setShow(canInstall())), []);
+  if (!show) return null;
+  return (
+    <button
+      onClick={() => promptInstall()}
+      className="flex items-center gap-1.5 rounded-lg bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-700 hover:bg-brand-100"
+      title="Installer l'application"
+    >
+      <Download size={16} /> <span className="hidden sm:inline">Installer l'app</span>
+    </button>
+  );
+}
 
 interface NavItem {
   to: string;
@@ -146,6 +162,7 @@ export function Layout({ children }: { children: ReactNode }) {
             )}
           </div>
           <div className="flex items-center gap-1 md:gap-2">
+            <InstallButton />
             <button onClick={() => setPwdOpen(true)} className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100" title="Changer le mot de passe">
               <KeyRound size={16} /> <span className="hidden sm:inline">Mot de passe</span>
             </button>
