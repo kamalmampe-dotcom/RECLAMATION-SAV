@@ -1,33 +1,53 @@
-import { Request, Response, NextFunction } from 'express';
+/**
+ * Middleware d'authentification & RBAC — basé sur la session serveur.
+ */
+import type { NextFunction, Request, Response } from 'express';
+import type { Role } from '@prisma/client';
+import { forbidden, unauthorized } from '../lib/errors.js';
+import { can, type Permission, type SessionUser } from '../lib/rbac.js';
 
-export function requireAuth(req: Request, res: Response, next: NextFunction): void {
-  const userId = req.headers['x-user-id'];
-  if (userId) {
-    if (!req.session) {
-      req.session = {} as any;
-    }
-    req.session.userId = parseInt(userId as string, 10);
-    req.session.role = req.headers['x-user-role'] as string;
-    next();
-  } else if (req.session && req.session.userId) {
-    next();
-  } else {
-    res.status(401).json({ error: 'Non autorisé' });
+/** Récupère l'utilisateur courant depuis la session (ou null). */
+export function currentUser(req: Request): SessionUser | null {
+  if (req.session?.userId && req.session.role) {
+    return { userId: req.session.userId, role: req.session.role, siteId: req.session.siteId ?? null };
   }
+  return null;
 }
 
-export function requireRole(...roles: string[]) {
-  return (req: Request, res: Response, next: NextFunction): void => {
-    const role = (req.headers['x-user-role'] as string) || (req.session && req.session.role);
-    if (!role) {
-      res.status(401).json({ error: 'Non autorisé' });
-      return;
-    }
-    
-    if (roles.includes(role)) {
-      next();
-    } else {
-      res.status(403).json({ error: 'Accès interdit' });
-    }
+/** Exige une session authentifiée. */
+export function requireAuth(req: Request, _res: Response, next: NextFunction): void {
+  if (!currentUser(req)) {
+    return next(unauthorized());
+  }
+  next();
+}
+
+/** Exige l'un des rôles indiqués. */
+export function requireRole(...roles: Role[]) {
+  return (req: Request, _res: Response, next: NextFunction): void => {
+    const user = currentUser(req);
+    if (!user) return next(unauthorized());
+    if (!roles.includes(user.role)) return next(forbidden());
+    next();
+  };
+}
+
+/** Exige une permission de la matrice RBAC. */
+export function requirePermission(permission: Permission) {
+  return (req: Request, _res: Response, next: NextFunction): void => {
+    const user = currentUser(req);
+    if (!user) return next(unauthorized());
+    if (!can(user.role, permission)) return next(forbidden());
+    next();
+  };
+}
+
+/** Exige au moins une des permissions indiquées. */
+export function requireAnyPermission(...permissions: Permission[]) {
+  return (req: Request, _res: Response, next: NextFunction): void => {
+    const user = currentUser(req);
+    if (!user) return next(unauthorized());
+    if (!permissions.some((p) => can(user.role, p))) return next(forbidden());
+    next();
   };
 }

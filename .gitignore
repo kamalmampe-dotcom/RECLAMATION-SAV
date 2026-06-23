@@ -6,3 +6,15 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Bases de données locales (SQLite hérité — remplacé par PostgreSQL)
+*.db
+*.db-journal
+*.sqlite
+
+# Fichiers uploadés (stockés sur Supabase Storage en production)
+public/uploads/
+src/public/uploads/
+
+# Prisma
+prisma/*.db

@@ -1,8 +1,6 @@
 {
   "name": "CFAO Automotive SAV",
-  "description": "Portail Reseau de Reclamations SAV",
+  "description": "Portail Réseau de Réclamations SAV",
   "requestFramePermissions": [],
-  "majorCapabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

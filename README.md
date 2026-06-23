@@ -1,26 +1,121 @@
-# Cobail Auto - SAV & Réclamations
+# CFAO Automotive — SAV / Gestion des Réclamations
 
-Application complète de gestion des réclamations clients pour la société Cobail Auto.
+Système professionnel de gestion des réclamations clients pour le réseau de
+concessions automobiles CFAO au Cameroun (Douala, Yaoundé, Bafoussam, Bertoua,
+Garoua, Ngaoundéré). Volume cible : ~1000 réclamations / mois.
 
-## Stack Technique
-- Backend: Node.js, Express
-- Base de données: SQLite
-- Frontend: HTML/CSS/JS (Vanilla)
-- Authentification: express-session (Cookies) + bcryptjs
-- Notifications: Nodemailer
+> ⚙️ Refonte en cours. Stack cible : **PostgreSQL (Supabase) + Express/TypeScript
+> + Prisma + React/Vite**. Voir [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) et
+> [`docs/ROADMAP.md`](docs/ROADMAP.md) pour l'avancement par phases.
 
-## Scripts
-- \`npm run init\` : Initialise la base de données et crée les 6 comptes par défaut.
-- \`npm run dev\` : Démarre le serveur en mode développement (sur le port 3000).
-- \`npm run build\` : Compile le serveur pour la production.
+## Stack technique
 
-## Comptes Pré-définis
-- **Call Center**: \`callcenter@cobail-auto.fr\` / \`CallC0b@il2024\`
-- **Chef Atelier**: \`chef.atelier@cobail-auto.fr\` / \`ChefAt3lier@2024\`
-- **Conseiller SAV**: \`conseiller.sav@cobail-auto.fr\` / \`SAV-C0ns3iller#2024\`
-- **Garantie**: \`garantie@cobail-auto.fr\` / \`G@rantieC0b@il2024\`
-- **Relation Client (CSI)**: \`csi@cobail-auto.fr\` / \`CS1-C0b@il@2024\`
-- **Direction**: \`direction@cobail-auto.fr\` / \`D1rection@C0b@il2024\`
+| Couche | Technologie |
+|---|---|
+| Base de données | PostgreSQL (Supabase) |
+| ORM / migrations | Prisma |
+| Backend | Node.js, Express, TypeScript |
+| Validation | Zod |
+| Auth | express-session (store PostgreSQL) + bcrypt — *RBAC en Phase 2* |
+| Emails | Nodemailer via Brevo (SMTP) — `NotificationService` centralisé |
+| Pièces jointes | Supabase Storage |
+| Frontend | React + Vite + TypeScript + Tailwind (+ Recharts pour les KPI) |
+| Escalade SLA | node-cron |
+| Logs | pino + table `email_logs` + `audit_logs` |
+| IA (option) | Gemini (classification / suggestions) |
 
-## Démarrage rapide
-L'application est lancée et exposera les pages web à la racine (ex: \`/\`) et l'API sous \`/api/\`. Le port de développement par défaut est 3000.
+## Prérequis
+
+- Node.js **20+** (testé sous Node 22)
+- Un projet **Supabase** (PostgreSQL) — ou un PostgreSQL local
+- Un compte **Brevo** pour l'envoi d'emails (optionnel en dev : mode simulation)
+
+## Démarrage
+
+```bash
+# 1. Dépendances
+npm install
+
+# 2. Configuration
+cp .env.example .env
+#   -> renseigner DATABASE_URL (Supabase), SESSION_SECRET, EMAIL_* (Brevo)
+
+# 3. Base de données : appliquer le schéma + jeu de données initial
+npm run db:migrate      # crée les tables (migrations Prisma)
+npm run db:seed         # 6 sites + taxonomie + comptes par défaut
+
+# 4. Lancer (API + frontend React en dev)
+npm run dev:all         # Express (API :3000) + Vite (UI :5173, proxy /api)
+#   ou séparément : `npm run dev` (API) et `npm run dev:web` (UI)
+```
+
+En production, `npm run build` compile le SPA React dans `dist/`, et `npm start`
+lance le serveur Express qui sert à la fois l'API et le frontend.
+
+### Scripts utiles
+
+| Script | Rôle |
+|---|---|
+| `npm run dev:all` | API + frontend React (dev) |
+| `npm run dev` | API Express seule (hot-reload) |
+| `npm run dev:web` | Frontend Vite seul |
+| `npm run db:migrate` | Crée/applique les migrations Prisma (dev) |
+| `npm run db:deploy` | Applique les migrations (production) |
+| `npm run db:seed` | Sites + catégories + causes racines + comptes |
+| `npm run db:studio` | Explorateur de base de données Prisma |
+| `npm run lint` | Vérification TypeScript |
+| `npm run build` | Build de production |
+
+## Comptes par défaut (après `db:seed`)
+
+Mot de passe par défaut : `Cfao@Sav2026` (à changer en production via `SEED_DEFAULT_PASSWORD`).
+
+| Rôle | Email |
+|---|---|
+| **Admin (système)** | `admin@cfao-sav.cm` |
+| Direction | `direction@cfao-sav.cm` |
+| Responsable SAV | `responsable.sav@cfao-sav.cm` |
+| CRM Manager | `crm.manager@cfao-sav.cm` |
+| Téléconseillère (par site) | `tc.dla@cfao-sav.cm`, `tc.yde@cfao-sav.cm`, … |
+| Chef d'atelier (par site) | `chef.dla@cfao-sav.cm`, `chef.yde@cfao-sav.cm`, … |
+| Conseiller SAV (par site) | `conseiller.dla@cfao-sav.cm`, … |
+
+Codes sites : `dla` (Douala), `yde` (Yaoundé), `baf` (Bafoussam), `bta` (Bertoua),
+`gra` (Garoua), `nga` (Ngaoundéré).
+
+## API (état actuel)
+
+Auth par session (cookie). Toutes les routes `/api/*` (hors `auth/login` et `health`)
+exigent une session ; les actions sont filtrées par RBAC (rôle + site).
+
+| Méthode | Endpoint | Permission |
+|---|---|---|
+| `GET` | `/api/health` | public |
+| `POST` | `/api/auth/login` | public |
+| `POST` | `/api/auth/logout` | authentifié |
+| `GET` | `/api/auth/me` | authentifié |
+| `GET` | `/api/reference/{sites,categories,root-causes}` | authentifié |
+| `GET/POST` | `/api/users` · `PATCH /api/users/:id` | ADMIN |
+| `GET/POST` | `/api/complaints` | view / create |
+| `GET` | `/api/complaints/:id` | view (scopé site) |
+| `PATCH` | `/api/complaints/:id/qualify` | CRM_MANAGER |
+| `PATCH` | `/api/complaints/:id/assign` | CHEF_ATELIER / RESPONSABLE_SAV |
+| `PATCH` | `/api/complaints/:id/status` | CONSEILLER_SAV / … |
+| `POST` | `/api/complaints/:id/ai-suggest` | CRM_MANAGER (si IA activée) |
+| `POST` | `/api/complaints/ops/escalation-sweep` | ADMIN / DIRECTION / RESPONSABLE_SAV |
+| `GET` | `/api/kpi/overview?days=&siteId=` | ADMIN / DIRECTION / RESPONSABLE_SAV |
+
+Notifications email automatiques (via `NotificationService`, journalisées dans
+`email_logs`) sur : création, affectation, changement de statut, escalade, clôture, NPS.
+Escalade automatique par `node-cron` (`ENABLE_JOBS=true`).
+
+> 🧪 **Test des emails sans domaine** : renseigne `TEST_NOTIFICATION_EMAIL` avec une
+> adresse perso — tous les emails y sont redirigés. Pour un envoi réel, utilise un
+> SMTP Gmail (mot de passe d'application) ou Brevo (voir `.env.example`).
+
+## Documentation
+
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — architecture applicative
+- [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) — modèle de données détaillé
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — déploiement (Supabase, Render, Brevo)
+- [`docs/ROADMAP.md`](docs/ROADMAP.md) — plan de livraison par phases
