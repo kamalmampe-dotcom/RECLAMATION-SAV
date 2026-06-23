@@ -16,6 +16,7 @@ const safeSelect = {
   createdAt: true,
   updatedAt: true,
   site: { select: { id: true, code: true, name: true, city: true } },
+  manager: { select: { id: true, fullName: true, email: true } },
 } satisfies Prisma.UserSelect;
 
 export const userRepository = {
@@ -77,5 +78,13 @@ export const userRepository = {
 
   countByEmail(email: string) {
     return prisma.user.count({ where: { email: email.toLowerCase() } });
+  },
+
+  countActiveAdmins() {
+    return prisma.user.count({ where: { role: 'ADMIN', active: true } });
+  },
+
+  delete(id: string) {
+    return prisma.user.delete({ where: { id } });
   },
 };

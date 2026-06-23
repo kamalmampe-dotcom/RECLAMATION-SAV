@@ -32,7 +32,7 @@ export default function NpsPage() {
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 text-slate-800">
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="mb-4 flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 font-bold text-white">CF</div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-brand-600 to-brand-800 font-bold text-white">CF</div>
           <div className="text-sm font-semibold">CFAO Automotive · Satisfaction</div>
         </div>
         {children}
@@ -66,7 +66,7 @@ export default function NpsPage() {
             key={n}
             onClick={() => setScore(n)}
             className={`rounded-md py-2 text-sm font-medium transition ${
-              score === n ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              score === n ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
             {n}
@@ -78,12 +78,12 @@ export default function NpsPage() {
         onChange={(e) => setComment(e.target.value)}
         rows={3}
         placeholder="Un commentaire (facultatif)"
-        className="mb-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+        className="mb-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
       />
       <button
         disabled={score === null || mut.isPending}
         onClick={() => mut.mutate()}
-        className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full rounded-lg bg-brand-600 py-2.5 text-sm font-medium text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {mut.isPending ? 'Envoi…' : 'Envoyer mon évaluation'}
       </button>

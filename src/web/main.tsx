@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App.tsx';
 import { AuthProvider } from './auth/AuthContext.tsx';
+import './lib/pwa.ts'; // capte l'évènement d'installation au plus tôt
 import './index.css';
 
 const queryClient = new QueryClient({

@@ -47,8 +47,8 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">Bonjour {user?.fullName?.split(' ')[0]}</h1>
-          <p className="text-sm text-slate-500">{ROLE_LABELS[role]} · {user?.site?.city ?? 'Réseau national'}</p>
+          <h1 className="text-xl font-semibold tracking-tight text-slate-900">Bonjour {user?.fullName?.split(' ')[0] ?? ''} 👋</h1>
+          <p className="text-sm text-slate-500">{ROLE_LABELS[role]}{user?.site?.city ? ` · ${user.site.city}` : ''}</p>
         </div>
         {(role === 'TELECONSEILLERE' || role === 'ADMIN') && (
           <Link to="/complaints/new" className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-700">

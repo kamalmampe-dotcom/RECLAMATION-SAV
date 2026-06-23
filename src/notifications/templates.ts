@@ -43,7 +43,7 @@ function layout(title: string, accent: string, inner: string): string {
     </div>
     <div style="padding: 22px;">${inner}</div>
     <div style="padding: 14px 22px; background: #f9fafb; font-size: 11px; color: #6b7280; border-top: 1px solid #e5e7eb;">
-      Message automatique - ne pas répondre directement. Réseau CFAO Automotive (Cameroun).
+      Message automatique - ne pas répondre directement. CFAO Mobility Cameroon.
     </div>
   </div>`;
 }

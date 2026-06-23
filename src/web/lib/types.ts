@@ -42,6 +42,7 @@ export interface UserRow extends CurrentUser {
   phone?: string | null;
   active: boolean;
   managerId?: string | null;
+  manager?: { id: string; fullName: string; email: string } | null;
 }
 
 export interface Category {
