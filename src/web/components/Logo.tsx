@@ -26,8 +26,8 @@ export function Logo({ tone = 'light', withWordmark = true }: { tone?: 'light' |
       )}
       {withWordmark && (
         <div className="leading-tight">
-          <div className={`text-sm font-semibold ${wordmarkColor}`}>CFAO Automotive</div>
-          <div className={`text-xs ${subColor}`}>SAV &amp; Réclamations</div>
+          <div className={`text-sm font-semibold ${wordmarkColor}`}>CFAO Mobility Cameroon</div>
+          <div className={`text-xs ${subColor}`}>Gestion des réclamations CRM</div>
         </div>
       )}
     </div>

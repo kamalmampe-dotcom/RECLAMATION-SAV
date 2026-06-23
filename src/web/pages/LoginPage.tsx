@@ -36,9 +36,9 @@ export default function LoginPage() {
         <div className="pointer-events-none absolute -bottom-32 -left-24 h-96 w-96 rounded-full bg-brand-600/30 blur-3xl" />
         <Logo tone="light" />
         <div className="relative">
-          <h2 className="text-3xl font-semibold leading-tight">Gestion des réclamations<br />du réseau CFAO</h2>
+          <h2 className="text-3xl font-semibold leading-tight">Gestion des réclamations<br />CFAO Mobility Cameroon</h2>
           <p className="mt-3 max-w-md text-brand-100/80">
-            Une plateforme unique pour suivre, qualifier et résoudre les réclamations clients sur l'ensemble des concessions.
+            Une plateforme CRM unique pour suivre, qualifier et résoudre les réclamations clients sur l'ensemble des concessions.
           </p>
           <ul className="mt-8 space-y-3 text-sm text-brand-100/90">
             <li className="flex items-center gap-3"><Network size={18} className="text-brand-200" /> Multi-sites : Douala, Yaoundé, Bafoussam, Bertoua, Garoua, Ngaoundéré</li>
@@ -60,7 +60,7 @@ export default function LoginPage() {
 
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
             <Field label="Email">
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} placeholder="vous@cfao-sav.cm" />
+              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} placeholder="abcde@cfao.com" />
             </Field>
             <Field label="Mot de passe">
               <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} placeholder="••••••••" />

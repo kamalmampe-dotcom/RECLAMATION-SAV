@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { requireAuth, requirePermission } from '../middleware/auth.js';
 import {
   createUser,
+  deleteUser,
   getUser,
   listUsers,
   setUserActive,
@@ -18,5 +19,6 @@ router.post('/', createUser);
 router.get('/:id', getUser);
 router.patch('/:id', updateUser);
 router.patch('/:id/active', setUserActive);
+router.delete('/:id', deleteUser);
 
 export default router;

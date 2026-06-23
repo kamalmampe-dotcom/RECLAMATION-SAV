@@ -2,10 +2,11 @@
  * Service de gestion des utilisateurs (administration).
  */
 import type { Role } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { userRepository } from '../repositories/userRepository.js';
 import { authService } from './authService.js';
 import { auditService } from './auditService.js';
-import { conflict, notFound } from '../lib/errors.js';
+import { badRequest, conflict, notFound } from '../lib/errors.js';
 import type { CreateUserInput, UpdateUserInput } from '../validation/schemas.js';
 
 export const userService = {
@@ -63,7 +64,11 @@ export const userService = {
   },
 
   async setActive(id: string, active: boolean, actorId: string, ip?: string | null) {
-    await this.getById(id);
+    const existing = await this.getById(id);
+    // On ne désactive pas le dernier administrateur actif.
+    if (!active && existing.role === 'ADMIN' && (await userRepository.countActiveAdmins()) <= 1) {
+      throw badRequest('Impossible de désactiver le dernier administrateur actif');
+    }
     const user = await userRepository.update(id, { active });
     await auditService.record({
       action: active ? 'USER_ENABLED' : 'USER_DISABLED',
@@ -73,5 +78,31 @@ export const userService = {
       ip,
     });
     return user;
+  },
+
+  async remove(id: string, actorId: string, ip?: string | null) {
+    const existing = await this.getById(id);
+    if (id === actorId) throw badRequest('Vous ne pouvez pas supprimer votre propre compte');
+    if (existing.role === 'ADMIN' && (await userRepository.countActiveAdmins()) <= 1) {
+      throw badRequest('Impossible de supprimer le dernier administrateur actif');
+    }
+    try {
+      await userRepository.delete(id);
+    } catch (err) {
+      // Contrainte de clé étrangère : l'utilisateur est lié à des données (réclamations…).
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2003') {
+        throw conflict("Cet utilisateur est lié à des réclamations : désactivez-le plutôt que de le supprimer");
+      }
+      throw err;
+    }
+    await auditService.record({
+      action: 'USER_DELETED',
+      entity: 'User',
+      entityId: id,
+      userId: actorId,
+      ip,
+      details: { email: existing.email },
+    });
+    return { deleted: true };
   },
 };

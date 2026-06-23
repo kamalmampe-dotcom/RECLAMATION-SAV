@@ -43,3 +43,9 @@ export const setUserActive = asyncHandler(async (req: Request, res: Response) =>
   const user = await userService.setActive(req.params.id, active, actor.userId, req.ip);
   res.json({ user });
 });
+
+export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
+  const actor = currentUser(req)!;
+  const result = await userService.remove(req.params.id, actor.userId, req.ip);
+  res.json(result);
+});

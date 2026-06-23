@@ -22,7 +22,7 @@ services:
       - key: ENABLE_JOBS
         value: "true"
       - key: COMPANY_NAME
-        value: CFAO Automotive
+        value: CFAO Mobility Cameroon
       - key: SESSION_SECRET
         generateValue: true # Render génère un secret fort automatiquement
       # --- À renseigner dans le dashboard (secrets) ---
