@@ -34,9 +34,9 @@ export function Logo({ tone = 'light' }: { tone?: 'light' | 'dark' }) {
         <span className="absolute inset-0 rounded-full bg-gradient-to-br from-rose-500 to-red-600" />
         <span className="absolute h-3 w-3 rounded-full bg-rose-900/40" style={{ left: 4, top: 5 }} />
       </span>
-      <span className="leading-none">
-        <span className={`block text-xl font-extrabold lowercase tracking-tight ${cfaoColor}`}>cfao</span>
-        <span className={`block text-[10px] font-semibold uppercase tracking-[0.28em] ${mobilityColor}`}>Mobility</span>
+      <span className="inline-flex flex-col items-end leading-none">
+        <span className={`block text-2xl font-extrabold lowercase tracking-tight ${cfaoColor}`}>cfao</span>
+        <span className={`-mr-[0.18em] block text-[9px] font-bold uppercase tracking-[0.3em] ${mobilityColor}`}>Mobility</span>
       </span>
     </div>
   );

@@ -2,6 +2,8 @@
   "name": "cfao-sav-reclamations",
   "private": true,
   "version": "1.0.0",
+  "description": "CFAO Mobility Cameroon - Système de gestion des réclamations CRM",
+  "author": "Junior MAMPE A BITEGNI",
   "type": "module",
   "engines": {
     "node": ">=20"

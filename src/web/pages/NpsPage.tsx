@@ -33,7 +33,7 @@ export default function NpsPage() {
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="mb-4 flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-brand-600 to-brand-800 font-bold text-white">CF</div>
-          <div className="text-sm font-semibold">CFAO Automotive · Satisfaction</div>
+          <div className="text-sm font-semibold">CFAO Mobility Cameroon · Satisfaction</div>
         </div>
         {children}
       </div>
