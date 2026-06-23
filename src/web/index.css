@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
-/* Identité visuelle CFAO — palette de marque (bleu corporate) + typographie. */
+/* =====================================================================
+   Identité visuelle CFAO — thème "Corporate affirmé"
+   Palette de marque (bleu corporate), typographie Inter, finitions.
+   ===================================================================== */
 @theme {
   --color-brand-50: #eef4ff;
   --color-brand-100: #dbe7ff;
@@ -11,10 +14,14 @@
   --color-brand-600: #2447c0;
   --color-brand-700: #1d3a9b;
   --color-brand-800: #1b327d;
-  --color-brand-900: #182c66;
+  --color-brand-900: #162a63;
+  --color-brand-950: #0f1d45;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
+
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 3px rgb(15 23 42 / 0.06);
+  --shadow-pop: 0 10px 30px -10px rgb(15 23 42 / 0.25);
 }
 
 @layer base {
@@ -24,12 +31,24 @@
   }
   body {
     font-family: var(--font-sans);
-    background-color: #f6f7f9;
+    background-color: #f5f6f8;
     color: #0f172a;
   }
-  /* Barre de défilement discrète */
+  ::selection {
+    background-color: var(--color-brand-200);
+  }
   * {
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 transparent;
   }
+}
+
+/* Animation discrète pour les squelettes de chargement. */
+@keyframes cfao-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+.cfao-skeleton {
+  animation: cfao-pulse 1.4s ease-in-out infinite;
+  background: linear-gradient(90deg, #e9edf3, #f3f5f8, #e9edf3);
 }

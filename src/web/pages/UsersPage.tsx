@@ -53,7 +53,7 @@ export default function UsersPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button className="text-sm text-blue-600 hover:underline" onClick={() => toggleActive.mutate(u)}>
+                    <button className="text-sm text-brand-600 hover:underline" onClick={() => toggleActive.mutate(u)}>
                       {u.active ? 'Désactiver' : 'Activer'}
                     </button>
                   </td>

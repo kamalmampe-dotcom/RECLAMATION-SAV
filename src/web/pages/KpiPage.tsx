@@ -34,7 +34,7 @@ export default function KpiPage() {
             <button
               key={p.value}
               onClick={() => setDays(p.value)}
-              className={`rounded-md px-3 py-1 text-sm ${days === p.value ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
+              className={`rounded-md px-3 py-1 text-sm ${days === p.value ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
             >
               {p.label}
             </button>
@@ -61,7 +61,7 @@ export default function KpiPage() {
                   <XAxis dataKey="month" fontSize={12} />
                   <YAxis allowDecimals={false} fontSize={12} />
                   <Tooltip />
-                  <Bar dataKey="count" name="Réclamations" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="count" name="Réclamations" fill="#2447c0" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </Card>
@@ -92,7 +92,7 @@ export default function KpiPage() {
                   <XAxis type="number" allowDecimals={false} fontSize={12} />
                   <YAxis type="category" dataKey="labelFr" width={140} fontSize={11} />
                   <Tooltip />
-                  <Bar dataKey="count" name="Occurrences" fill="#6366f1" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="count" name="Occurrences" fill="#355fe0" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
               {data.topRootCauses.length === 0 && <p className="text-center text-sm text-slate-400">Aucune donnée.</p>}

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api.ts';
-import { Button, Card, PriorityBadge, StatusBadge, inputClass } from '../components/ui.tsx';
+import { Button, Card, PriorityBadge, SkeletonRows, StatusBadge, inputClass } from '../components/ui.tsx';
 import { STATUS_LABELS, PRIORITY_LABELS, formatDate } from '../lib/labels.ts';
 import type { ComplaintList, ComplaintStatus, Priority } from '../lib/types.ts';
 
@@ -45,8 +45,11 @@ export default function ComplaintsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold">Réclamations</h1>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight text-slate-900">Réclamations</h1>
+          <p className="mt-0.5 text-sm text-slate-500">{total} dossier(s) au total</p>
+        </div>
         <div className="flex flex-wrap gap-2">
           <input
             type="search"
@@ -71,7 +74,7 @@ export default function ComplaintsPage() {
       </div>
 
       <Card>
-        {isLoading && <div className="p-6 text-sm text-slate-500">Chargement…</div>}
+        {isLoading && <SkeletonRows rows={6} />}
         {error && <div className="p-6 text-sm text-red-600">Erreur de chargement.</div>}
         {data && (
           <div className="overflow-x-auto">
@@ -91,7 +94,7 @@ export default function ComplaintsPage() {
                 {data.items.map((c) => (
                   <tr key={c.id} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="px-4 py-3">
-                      <Link to={`/complaints/${c.id}`} className="font-medium text-blue-600 hover:underline">{c.reference}</Link>
+                      <Link to={`/complaints/${c.id}`} className="font-medium text-brand-600 hover:underline">{c.reference}</Link>
                       {c.escalationLevel > 0 && <span className="ml-2 rounded bg-red-100 px-1.5 py-0.5 text-xs text-red-700">N{c.escalationLevel}</span>}
                     </td>
                     <td className="px-4 py-3">{c.clientName}</td>

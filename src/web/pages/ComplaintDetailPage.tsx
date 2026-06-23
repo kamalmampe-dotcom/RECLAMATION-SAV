@@ -104,7 +104,7 @@ export default function ComplaintDetailPage() {
             <ol className="space-y-3">
               {c.statusHistory.map((h) => (
                 <li key={h.id} className="flex gap-3 text-sm">
-                  <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-blue-500" />
+                  <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-500" />
                   <div>
                     <div>{h.fromStatus ? `${STATUS_LABELS[h.fromStatus]} → ` : ''}<strong>{STATUS_LABELS[h.toStatus]}</strong></div>
                     {h.comment && <div className="text-slate-500">{h.comment}</div>}
@@ -203,7 +203,7 @@ function AttachmentsPanel({ id, canUpload }: { id: string; canUpload: boolean })
         <ul className="space-y-2">
           {attachments.map((a) => (
             <li key={a.id} className="flex items-center justify-between gap-3 text-sm">
-              <a href={`/api/complaints/attachments/${a.id}/download`} className="truncate text-blue-600 hover:underline" target="_blank" rel="noreferrer">
+              <a href={`/api/complaints/attachments/${a.id}/download`} className="truncate text-brand-600 hover:underline" target="_blank" rel="noreferrer">
                 {a.fileName}
               </a>
               <span className="shrink-0 text-xs text-slate-400">{formatSize(a.size)}</span>
@@ -212,7 +212,7 @@ function AttachmentsPanel({ id, canUpload }: { id: string; canUpload: boolean })
         </ul>
       )}
       {canUpload && storageEnabled && (
-        <label className="mt-3 inline-block cursor-pointer text-sm font-medium text-blue-600 hover:underline">
+        <label className="mt-3 inline-block cursor-pointer text-sm font-medium text-brand-600 hover:underline">
           {uploadMut.isPending ? 'Envoi…' : '+ Ajouter un fichier'}
           <input
             type="file"
