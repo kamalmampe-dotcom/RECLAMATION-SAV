@@ -168,10 +168,6 @@ function formatSize(bytes: number | null): string {
 function AttachmentsPanel({ id, canUpload }: { id: string; canUpload: boolean }) {
   const qc = useQueryClient();
   const [error, setError] = useState<string | null>(null);
-  const { data: config } = useQuery({
-    queryKey: ['config'],
-    queryFn: () => api.get<{ aiEnabled: boolean; storageEnabled: boolean }>('/api/reference/config'),
-  });
   const { data } = useQuery({
     queryKey: ['attachments', id],
     queryFn: () => api.get<{ attachments: AttachmentRow[] }>(`/api/complaints/${id}/attachments`),
@@ -191,7 +187,6 @@ function AttachmentsPanel({ id, canUpload }: { id: string; canUpload: boolean })
   });
 
   const attachments = data?.attachments ?? [];
-  const storageEnabled = config?.storageEnabled ?? false;
 
   return (
     <Card className="p-5">
@@ -211,23 +206,24 @@ function AttachmentsPanel({ id, canUpload }: { id: string; canUpload: boolean })
           ))}
         </ul>
       )}
-      {canUpload && storageEnabled && (
-        <label className="mt-3 inline-block cursor-pointer text-sm font-medium text-brand-600 hover:underline">
-          {uploadMut.isPending ? 'Envoi…' : '+ Ajouter un fichier'}
-          <input
-            type="file"
-            className="hidden"
-            disabled={uploadMut.isPending}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) uploadMut.mutate(file);
-              e.target.value = '';
-            }}
-          />
-        </label>
-      )}
-      {canUpload && !storageEnabled && (
-        <p className="mt-3 text-xs text-slate-400">Stockage des fichiers non configuré.</p>
+      {canUpload && (
+        <div className="mt-3">
+          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-700 hover:bg-brand-100">
+            {uploadMut.isPending ? 'Envoi…' : '+ Ajouter une image / un fichier'}
+            <input
+              type="file"
+              accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt"
+              className="hidden"
+              disabled={uploadMut.isPending}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) uploadMut.mutate(file);
+                e.target.value = '';
+              }}
+            />
+          </label>
+          <p className="mt-1 text-xs text-slate-400">Images, PDF, documents… (max 5 Mo)</p>
+        </div>
       )}
     </Card>
   );

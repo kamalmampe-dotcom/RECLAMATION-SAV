@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ListChecks, PlusCircle, Users, BarChart3, LogOut, Menu, X, KeyRound, MapPin, Download } from 'lucide-react';
+import { LayoutDashboard, ListChecks, PlusCircle, Users, BarChart3, LogOut, Menu, X, KeyRound, MapPin, Download, ScrollText } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext.tsx';
 import { ROLE_LABELS } from '../lib/labels.ts';
 import type { Role } from '../lib/types.ts';
@@ -38,6 +38,7 @@ const MAIN_NAV: NavItem[] = [
 
 const ADMIN_NAV: NavItem[] = [
   { to: '/admin/users', label: 'Utilisateurs', icon: <Users size={18} /> },
+  { to: '/admin/logs', label: 'Journaux', icon: <ScrollText size={18} /> },
 ];
 
 function initials(name?: string): string {

@@ -43,6 +43,31 @@ export interface UserRow extends CurrentUser {
   active: boolean;
   managerId?: string | null;
   manager?: { id: string; fullName: string; email: string } | null;
+  lastSeenAt?: string | null;
+}
+
+export interface AuditLogRow {
+  id: string;
+  action: string;
+  entity: string;
+  entityId: string | null;
+  ip: string | null;
+  details: unknown;
+  createdAt: string;
+  user: { fullName: string; email: string } | null;
+  complaint: { reference: string } | null;
+}
+
+export interface EmailLogRow {
+  id: string;
+  template: string;
+  toAddress: string;
+  subject: string;
+  status: 'SENT' | 'FAILED';
+  error: string | null;
+  providerMessageId: string | null;
+  createdAt: string;
+  complaint: { reference: string } | null;
 }
 
 export interface Category {

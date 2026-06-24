@@ -13,6 +13,7 @@ const safeSelect = {
   active: true,
   siteId: true,
   managerId: true,
+  lastSeenAt: true,
   createdAt: true,
   updatedAt: true,
   site: { select: { id: true, code: true, name: true, city: true } },

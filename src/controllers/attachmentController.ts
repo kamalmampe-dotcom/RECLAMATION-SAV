@@ -21,6 +21,12 @@ export const uploadAttachment = asyncHandler(async (req: Request, res: Response)
 
 export const downloadAttachment = asyncHandler(async (req: Request, res: Response) => {
   const actor = currentUser(req)!;
-  const url = await attachmentService.downloadUrl(req.params.attId, actor);
-  res.redirect(url);
+  const result = await attachmentService.getForDownload(req.params.attId, actor);
+  if (result.kind === 'url') {
+    res.redirect(result.url);
+    return;
+  }
+  res.setHeader('Content-Type', result.mimeType);
+  res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(result.fileName)}"`);
+  res.send(result.buffer);
 });

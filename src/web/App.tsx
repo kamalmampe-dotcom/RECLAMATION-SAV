@@ -9,6 +9,7 @@ import ComplaintsPage from './pages/ComplaintsPage.tsx';
 import NewComplaintPage from './pages/NewComplaintPage.tsx';
 import ComplaintDetailPage from './pages/ComplaintDetailPage.tsx';
 import UsersPage from './pages/UsersPage.tsx';
+import LogsPage from './pages/LogsPage.tsx';
 import type { Role } from './lib/types.ts';
 
 // La page KPI embarque Recharts (lourd) - chargée à la demande.
@@ -42,6 +43,7 @@ export default function App() {
         }
       />
       <Route path="/admin/users" element={<Protected roles={['ADMIN']}><UsersPage /></Protected>} />
+      <Route path="/admin/logs" element={<Protected roles={['ADMIN']}><LogsPage /></Protected>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
