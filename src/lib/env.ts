@@ -22,6 +22,8 @@ const schema = z.object({
   SUPABASE_STORAGE_BUCKET: z.string().default('complaint-attachments'),
 
   // Email (Brevo / SMTP)
+  // Recommandé sur Render (qui bloque le SMTP sortant) : clé API HTTP Brevo.
+  BREVO_API_KEY: z.string().optional().or(z.literal('')),
   EMAIL_HOST: z.string().optional().or(z.literal('')),
   EMAIL_PORT: z.coerce.number().default(587),
   EMAIL_SECURE: z
@@ -60,8 +62,14 @@ if (!parsed.success) {
 
 export const env = parsed.data;
 
-/** Indique si l'envoi d'email réel est configuré (sinon mode simulation). */
-export const isEmailConfigured = Boolean(env.EMAIL_HOST && env.EMAIL_USER && env.EMAIL_PASS);
+/** Envoi via l'API HTTP Brevo (recommandé : contourne le blocage SMTP de Render). */
+export const isBrevoApiConfigured = Boolean(env.BREVO_API_KEY);
+
+/** Envoi via SMTP classique (nodemailer). */
+export const isSmtpConfigured = Boolean(env.EMAIL_HOST && env.EMAIL_USER && env.EMAIL_PASS);
+
+/** Indique si un envoi d'email réel est possible (sinon mode simulation). */
+export const isEmailConfigured = isBrevoApiConfigured || isSmtpConfigured;
 
 /** Indique si le stockage des pièces jointes (Supabase Storage) est configuré. */
 export const isStorageConfigured = Boolean(env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY);

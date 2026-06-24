@@ -12,7 +12,7 @@ import type { Role } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 import { env } from '../lib/env.js';
-import { getTransporter, senderAddress } from '../lib/mailer.js';
+import { sendMail } from '../lib/mailer.js';
 import * as tpl from '../notifications/templates.js';
 import type { NotifComplaint, RenderedEmail } from '../notifications/templates.js';
 
@@ -47,7 +47,6 @@ async function deliver(params: {
     recipients = [env.TEST_NOTIFICATION_EMAIL];
   }
 
-  const transporter = getTransporter();
   const toAddress = recipients.join(', ');
 
   let status: 'SENT' | 'FAILED' = 'SENT';
@@ -55,19 +54,9 @@ async function deliver(params: {
   let providerMessageId: string | null = null;
 
   try {
-    if (transporter) {
-      const info = await transporter.sendMail({
-        from: senderAddress(),
-        to: toAddress,
-        subject: params.rendered.subject,
-        html: params.rendered.html,
-      });
-      providerMessageId = info.messageId ?? null;
-      logger.info({ template: params.template, to: toAddress }, 'Email envoyé');
-    } else {
-      providerMessageId = 'SIMULATED';
-      logger.info({ template: params.template, to: toAddress, subject: params.rendered.subject }, '[SIMULATION] Email');
-    }
+    const result = await sendMail({ to: toAddress, subject: params.rendered.subject, html: params.rendered.html });
+    providerMessageId = result.simulated ? 'SIMULATED' : result.messageId;
+    logger.info({ template: params.template, to: toAddress }, result.simulated ? '[SIMULATION] Email' : 'Email envoyé');
   } catch (err) {
     status = 'FAILED';
     error = err instanceof Error ? err.message : String(err);
