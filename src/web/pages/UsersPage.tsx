@@ -8,15 +8,21 @@ import type { Role, SiteRef, UserRow } from '../lib/types.ts';
 
 const ROLES: Role[] = ['ADMIN', 'TELECONSEILLERE', 'CRM_MANAGER', 'CONSEILLER_SAV', 'CHEF_ATELIER', 'RESPONSABLE_SAV', 'DIRECTION'];
 
+/** En ligne = activité dans les 5 dernières minutes. */
+function isOnline(lastSeenAt?: string | null): boolean {
+  return !!lastSeenAt && Date.now() - new Date(lastSeenAt).getTime() < 5 * 60_000;
+}
+
 export default function UsersPage() {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<UserRow | 'new' | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const { data } = useQuery({ queryKey: ['users'], queryFn: () => api.get<{ users: UserRow[] }>('/api/users') });
+  const { data } = useQuery({ queryKey: ['users'], queryFn: () => api.get<{ users: UserRow[] }>('/api/users'), refetchInterval: 30_000 });
   const { data: sitesData } = useQuery({ queryKey: ['sites'], queryFn: () => api.get<{ sites: SiteRef[] }>('/api/reference/sites') });
 
   const users = data?.users ?? [];
+  const onlineCount = users.filter((u) => isOnline(u.lastSeenAt)).length;
   const refresh = () => qc.invalidateQueries({ queryKey: ['users'] });
 
   const toggleActive = useMutation({
@@ -34,7 +40,7 @@ export default function UsersPage() {
     <div className="space-y-4">
       <PageHeader
         title="Utilisateurs"
-        subtitle={`${users.length} compte(s) · gestion des accès et de la hiérarchie d'escalade`}
+        subtitle={`${users.length} compte(s) · ${onlineCount} en ligne`}
         actions={
           <Button onClick={() => { setActionError(null); setEditing('new'); }}>
             <UserPlus size={16} /> Nouvel utilisateur
@@ -71,7 +77,15 @@ export default function UsersPage() {
             <tbody>
               {users.map((u) => (
                 <tr key={u.id} className="border-b border-slate-100 hover:bg-slate-50/60">
-                  <td className="px-4 py-3 font-medium text-slate-800">{u.fullName}</td>
+                  <td className="px-4 py-3 font-medium text-slate-800">
+                    <span className="inline-flex items-center gap-2">
+                      <span
+                        className={`h-2 w-2 shrink-0 rounded-full ${isOnline(u.lastSeenAt) ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                        title={isOnline(u.lastSeenAt) ? 'En ligne' : 'Hors ligne'}
+                      />
+                      {u.fullName}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-slate-600">{u.email}</td>
                   <td className="px-4 py-3">{ROLE_LABELS[u.role]}</td>
                   <td className="px-4 py-3">{u.site?.city ?? '-'}</td>

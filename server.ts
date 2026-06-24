@@ -12,12 +12,14 @@ import { buildSessionMiddleware } from './src/lib/session.js';
 import { errorHandler, notFoundHandler } from './src/middleware/errorHandler.js';
 import { startEscalationJob } from './src/jobs/escalationJob.js';
 
+import { trackPresence } from './src/middleware/presence.js';
 import authRoutes from './src/routes/auth.js';
 import userRoutes from './src/routes/users.js';
 import complaintRoutes from './src/routes/complaints.js';
 import referenceRoutes from './src/routes/reference.js';
 import kpiRoutes from './src/routes/kpi.js';
 import npsRoutes from './src/routes/nps.js';
+import adminRoutes from './src/routes/admin.js';
 
 const currentDir =
   typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
@@ -34,6 +36,7 @@ function startServer() {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   app.use(buildSessionMiddleware());
+  app.use(trackPresence); // met à jour la présence des utilisateurs connectés
 
   // --- API ---
   app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }));
@@ -43,6 +46,7 @@ function startServer() {
   app.use('/api/reference', referenceRoutes);
   app.use('/api/kpi', kpiRoutes);
   app.use('/api/nps', npsRoutes);
+  app.use('/api/admin', adminRoutes);
 
   // 404 JSON pour les routes /api inconnues
   app.use('/api', notFoundHandler);

@@ -114,6 +114,7 @@ model User {
   role         Role
   phone        String?
   active       Boolean  @default(true)
+  lastSeenAt   DateTime? @map("last_seen_at") // dernière activité (présence)
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
@@ -365,7 +366,8 @@ model Attachment {
   complaintId String    @map("complaint_id")
   complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
   fileName    String    @map("file_name")
-  storagePath String    @map("storage_path") // chemin Supabase Storage
+  storagePath String?   @map("storage_path") // chemin Supabase Storage (si stockage externe)
+  data        Bytes? // contenu du fichier si stocké en base (repli sans Supabase Storage)
   mimeType    String?   @map("mime_type")
   size        Int?
   uploadedById String   @map("uploaded_by")
