@@ -32,7 +32,11 @@ services:
         sync: false
       - key: APP_URL # URL publique Render (ex: https://cfao-sav.onrender.com)
         sync: false
-      # --- Emails (Brevo / SMTP) — optionnels au début (mode simulation sinon) ---
+      # --- Emails ---
+      # RECOMMANDÉ sur Render (le SMTP sortant est bloqué) : API HTTP Brevo.
+      - key: BREVO_API_KEY
+        sync: false
+      # SMTP (alternative, souvent bloquée par Render) :
       - key: EMAIL_HOST
         sync: false
       - key: EMAIL_PORT
